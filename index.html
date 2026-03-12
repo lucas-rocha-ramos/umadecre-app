@@ -20,7 +20,7 @@
 
     <script>
         tailwind.config = {
-            darkMode: 'class', // Alterado para controlo manual
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'] },
@@ -34,7 +34,6 @@
             }
         }
         
-        // Verifica e aplica Tema logo ao carregar
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -55,7 +54,7 @@
         input, textarea, select { -webkit-user-select: auto; user-select: auto; }
         .dark body { background-color: #000000; color: white; }
         
-        .pt-safe-top { padding-top: max(env(safe-area-inset-top), 1rem); }
+        .pt-safe-top { padding-top: max(env(safe-area-inset-top), 1.5rem); }
         .pb-safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1.5rem); }
 
         .glass-panel {
@@ -105,7 +104,7 @@
         .aspect-square { aspect-ratio: 1 / 1; }
     </style>
 </head>
-<body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-24 pb-safe-bottom">
+<body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
 
     <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
@@ -116,31 +115,19 @@
         <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
     </div>
 
-    <!-- HEADER -->
-    <header class="fixed top-0 left-0 right-0 z-40 glass-panel border-b-0 pt-safe-top">
-        <div class="flex items-center justify-between px-6 py-4">
-            <h1 id="headerTitle" class="text-2xl font-bold tracking-tight">Início</h1>
-            
-            <div class="flex items-center gap-3">
-                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-sm hover:scale-95 transition-all">
-                    <i id="themeIcon" class="ph-bold ph-moon text-xl"></i>
-                </button>
-                <button onclick="forceSync()" id="btnSync" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-sm hover:scale-95 transition-all">
-                    <i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i>
-                </button>
-                <button id="mainAddBtn" onclick="openContextModal()" class="w-10 h-10 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-lg hover:bg-blue-600 hover:scale-95 transition-all">
-                    <i class="ph-bold ph-plus text-xl"></i>
-                </button>
-            </div>
-        </div>
-    </header>
+    <!-- BOTÃO ADICIONAR FLUTUANTE (FAB) -->
+    <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all">
+        <i class="ph-bold ph-plus text-2xl"></i>
+    </button>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="pt-28 px-4 max-w-3xl mx-auto min-h-screen">
+    <!-- Adicionado pt-safe-top e pb-40 para o conteúdo não esconder atrás dos botões inferiores -->
+    <main class="pt-safe-top px-4 max-w-3xl mx-auto min-h-screen pb-40 pt-8">
         
         <!-- 1. INÍCIO (Dashboard) -->
         <div id="view-inicio" class="view-section space-y-6">
-            <div class="glass-panel ios-card p-6 flex items-center justify-between">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
+            <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
                     <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
@@ -175,6 +162,7 @@
 
         <!-- 2. TAREFAS -->
         <div id="view-tarefas" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Tarefas</h1>
             <div id="tarefasList" class="space-y-4">
                 <!-- Gerado via JS -->
             </div>
@@ -182,6 +170,7 @@
 
         <!-- 3. CONCLUÍDAS -->
         <div id="view-concluidas" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
             <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
             <div id="concluidasList" class="space-y-4">
                 <!-- Gerado via JS -->
@@ -190,6 +179,7 @@
 
         <!-- 4. CHECKLIST -->
         <div id="view-checklist" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
             <div class="glass-panel ios-card overflow-hidden">
                 <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800">
                     <!-- Gerado via JS -->
@@ -199,30 +189,82 @@
 
         <!-- 5. MATERIAIS -->
         <div id="view-materiais" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
             <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
             <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Gerado via JS -->
             </div>
         </div>
 
+        <!-- 6. CONFIGURAÇÕES (NOVO) -->
+        <div id="view-config" class="view-section hidden space-y-6">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
+            
+            <div class="glass-panel ios-card p-5 space-y-6">
+                <!-- Alterar Tema -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center">
+                            <i id="themeIcon" class="ph-bold ph-moon text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Modo Escuro</p>
+                            <p class="text-xs text-gray-500">Alternar tema do aplicativo</p>
+                        </div>
+                    </div>
+                    <!-- Switch iOS Style -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
+                    </label>
+                </div>
+
+                <hr class="border-gray-200 dark:border-gray-800">
+
+                <!-- Sincronizar Dados -->
+                <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center">
+                            <i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Sincronizar Dados</p>
+                            <p class="text-xs text-gray-500">Forçar atualização da planilha</p>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Informações App -->
+            <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
+                <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
+                <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
+                <p class="text-[10px]">Versão 1.2 • Atualizado</p>
+            </div>
+        </div>
+
     </main>
 
     <!-- BOTTOM NAVIGATION -->
-    <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-around items-center">
-        <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 w-16 transition-colors" data-tab="inicio">
-            <i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[10px] font-semibold">Início</span>
+    <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-between items-center">
+        <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 flex-1 transition-colors" data-tab="inicio">
+            <i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span>
         </button>
-        <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="tarefas">
-            <i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[10px] font-semibold">Tarefas</span>
+        <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="tarefas">
+            <i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[9px] font-semibold uppercase">Tarefas</span>
         </button>
-        <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas">
-            <i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[10px] font-semibold">Concluídas</span>
+        <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas">
+            <i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[9px] font-semibold uppercase">Feitas</span>
         </button>
-        <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist">
-            <i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[10px] font-semibold">Checklist</span>
+        <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist">
+            <i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[9px] font-semibold uppercase">Check</span>
         </button>
-        <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais">
-            <i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[10px] font-semibold">Materiais</span>
+        <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais">
+            <i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span>
+        </button>
+        <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="config">
+            <i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span>
         </button>
     </nav>
 
@@ -382,19 +424,24 @@
         }
         function atualizarIconeTema() {
             const icon = document.getElementById('themeIcon');
-            if(document.documentElement.classList.contains('dark')) {
-                icon.classList.replace('ph-moon', 'ph-sun');
+            const checkbox = document.getElementById('themeToggleCheckbox');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            if(isDark) {
+                if(icon) icon.classList.replace('ph-moon', 'ph-sun');
+                if(checkbox) checkbox.checked = true;
             } else {
-                icon.classList.replace('ph-sun', 'ph-moon');
+                if(icon) icon.classList.replace('ph-sun', 'ph-moon');
+                if(checkbox) checkbox.checked = false;
             }
         }
 
         // --- SYNC (PULL TO REFRESH) ---
         async function forceSync() {
             const icon = document.getElementById('syncIcon');
-            icon.classList.add('animate-spin');
+            if(icon) icon.classList.add('animate-spin');
             await fetchData();
-            icon.classList.remove('animate-spin');
+            if(icon) icon.classList.remove('animate-spin');
         }
 
         // --- NAVEGAÇÃO ---
@@ -412,15 +459,18 @@
                 }
             });
 
-            const titles = { 'inicio': 'Início', 'tarefas': 'Tarefas', 'concluidas': 'Concluídas', 'checklist': 'Checklist', 'materiais': 'Materiais' };
-            document.getElementById('headerTitle').innerText = titles[tabName];
-
+            // Controle do botão flutuante de Adicionar
             const btn = document.getElementById('mainAddBtn');
-            btn.style.transform = 'scale(0.8)';
-            setTimeout(() => btn.style.transform = 'scale(1)', 150);
-            
-            if(tabName === 'concluidas') { btn.style.display = 'none'; } 
-            else { btn.style.display = 'flex'; }
+            if(btn) {
+                btn.style.transform = 'scale(0.8)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 150);
+                if(tabName === 'concluidas' || tabName === 'config') { 
+                    btn.style.display = 'none'; 
+                } else { 
+                    btn.style.display = 'flex'; 
+                }
+            }
+
             renderAll();
         }
 
@@ -708,7 +758,7 @@
             openModal('modalMaterial');
         }
 
-        // --- SISTEMA DE EXCLUSÃO (NOVO) ---
+        // --- SISTEMA DE EXCLUSÃO ---
         async function confirmDelete(type) {
             if(!confirm(`Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.`)) return;
             
