@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <!-- Configurações para Mobile e App -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f0f11" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+    
+    <!-- Configurações Específicas para iOS (Apple) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Umadecre">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png">
+    
+    <!-- Link para o Manifest (Necessário se for transformar em PWA real) -->
+    <!-- <link rel="manifest" href="manifest.json"> -->
+
+    <title>Umadecre - Controle de Mídia</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts: Inter (Semelhante ao San Francisco da Apple) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        iosBlue: '#007AFF',
+                        iosGreen: '#34C759',
+                        iosGray: '#F2F2F7',
+                        iosDarkGray: '#1C1C1E',
+                    },
+                    animation: {
+                        'spring-up': 'springUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                    },
+                    keyframes: {
+                        springUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Conceito iOS 26 - Glassmorphism & Smoothness */
+        body {
+            /* Comportamentos de Aplicativo Nativo */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none; /* Desativa menu de contexto no iOS */
+            -webkit-user-select: none; /* Desativa seleção de texto no iOS */
+            user-select: none; /* Desativa seleção de texto */
+            overscroll-behavior-y: none; /* Previne o "puxar para atualizar" nativo dos navegadores */
+            background-color: #f2f2f7;
+        }
+
+        /* Permite seleção de texto apenas em inputs e textareas */
+        input, textarea {
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #000000; color: white; }
+        }
+
+        /* Ajustes de Safe Area para iPhones com Notch/Dynamic Island */
+        .pt-safe-top {
+            padding-top: max(env(safe-area-inset-top), 1rem);
+        }
+        .pb-safe-bottom {
+            padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .glass-panel {
+                background: rgba(28, 28, 30, 0.65);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .ios-card {
+            border-radius: 24px;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+        }
+        
+        .ios-card:active {
+            transform: scale(0.96);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Circular Progress */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .nav-item.active {
+            color: #007AFF;
+        }
+        @media (prefers-color-scheme: dark) {
+            .nav-item.active { color: #0A84FF; }
+        }
+
+        /* Modal transitions */
+        .modal-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Fullscreen Slide Modals (Gallery & Preview) */
+        .slide-modal {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slide-modal.active {
+            transform: translateY(0);
+        }
+
+        /* Forms */
+        .ios-input {
+            width: 100%;
+            background: rgba(118, 118, 128, 0.12);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 17px;
+            border: none;
+            outline: none;
+            transition: background 0.2s;
+        }
+        .ios-input:focus {
+            background: rgba(118, 118, 128, 0.2);
+        }
+        @media (prefers-color-scheme: dark) {
+            .ios-input { background: rgba(118, 118, 128, 0.24); color: white;}
+            .ios-input:focus { background: rgba(118, 118, 128, 0.35); }
+        }
+
+        /* Aspect ratio for gallery thumbnails */
+        .aspect-square {
+            aspect-ratio: 1 / 1;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-24 pb-safe-bottom">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
+        <div class="relative flex items-center justify-center w-72 h-72 mb-6 animate-fade-in">
+            <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" alt="Logo Graça Criativa" class="w-full h-full object-contain drop-shadow-2xl">
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white">Umadecre</h1>
+        <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
+    </div>
+
+    <!-- HEADER -->
+    <header class="fixed top-0 left-0 right-0 z-40 glass-panel border-b-0 pt-safe-top">
+        <div class="flex items-center justify-between px-6 py-4">
+            <h1 id="headerTitle" class="text-2xl font-bold tracking-tight">Início</h1>
+            <button id="mainAddBtn" onclick="openContextModal()" class="w-10 h-10 rounded-full bg-iosBlue text-white flex items-center justify-center ios-card shadow-lg hover:bg-blue-600 transition-colors">
+                <i class="ph-bold ph-plus text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="pt-28 px-4 max-w-3xl mx-auto min-h-screen">
+        
+        <!-- VIEWS -->
+        <!-- 1. INÍCIO (Dashboard) -->
+        <div id="view-inicio" class="view-section space-y-6">
+            <div class="glass-panel ios-card p-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
+                    <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
+                    <p class="text-sm text-gray-500 mt-2"><span id="dashCompleted">0</span> de <span id="dashTotal">0</span> tarefas</p>
+                </div>
+                <div class="relative w-28 h-28">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200 dark:text-gray-800 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                        <circle id="progressCircle" class="text-iosBlue stroke-current progress-ring__circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                    </svg>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mt-8 mb-4 px-2">Resumo</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('tarefas')">
+                    <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-clock text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Pendentes</p>
+                    <p class="text-2xl font-bold" id="dashPendenteCount">0</p>
+                </div>
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('concluidas')">
+                    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-check-circle text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Concluídas</p>
+                    <p class="text-2xl font-bold" id="dashConcluidaCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TAREFAS -->
+        <div id="view-tarefas" class="view-section hidden space-y-4">
+            <div id="tarefasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 3. CONCLUÍDAS -->
+        <div id="view-concluidas" class="view-section hidden space-y-4">
+            <div id="concluidasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 4. CHECKLIST -->
+        <div id="view-checklist" class="view-section hidden space-y-4">
+            <div class="glass-panel ios-card overflow-hidden">
+                <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MATERIAIS -->
+        <div id="view-materiais" class="view-section hidden space-y-4">
+            <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION (iOS Tab Bar Style) -->
+    <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-around items-center">
+        <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 w-16 transition-colors" data-tab="inicio">
+            <i class="ph-fill ph-squares-four text-2xl"></i>
+            <span class="text-[10px] font-semibold">Início</span>
+        </button>
+        <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="tarefas">
+            <i class="ph-fill ph-list-bullets text-2xl"></i>
+            <span class="text-[10px] font-semibold">Tarefas</span>
+        </button>
+        <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas">
+            <i class="ph-fill ph-check-square-offset text-2xl"></i>
+            <span class="text-[10px] font-semibold">Concluídas</span>
+        </button>
+        <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist">
+            <i class="ph-fill ph-clipboard-text text-2xl"></i>
+            <span class="text-[10px] font-semibold">Checklist</span>
+        </button>
+        <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 w-16 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais">
+            <i class="ph-fill ph-folder-notch text-2xl"></i>
+            <span class="text-[10px] font-semibold">Materiais</span>
+        </button>
+    </nav>
+
+    <!-- MODALS DE CRIAÇÃO/EDIÇÃO -->
+    
+    <!-- Modal Tarefa -->
+    <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTarefaTitle" class="text-xl font-bold">Nova Tarefa</h2>
+                <button onclick="closeModal('modalTarefa')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            <form id="formTarefa" onsubmit="submitTarefa(event)" class="space-y-4">
+                <input type="text" id="t_nome" placeholder="Nome da Tarefa (ex: Edição do Culto)" class="ios-input" required>
+                <textarea id="t_desc" placeholder="Descrição detalhada..." class="ios-input h-24 resize-none" required></textarea>
+                <input type="text" id="t_resp" placeholder="Responsável" class="ios-input" required>
+                <input type="date" id="t_prazo" class="ios-input" required>
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="t_btn_text">Salvar Tarefa</span>
+                    <i id="t_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Checklist -->
+    <div id="modalChecklist" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalChecklistTitle" class="text-xl font-bold">Adicionar ao Checklist</h2>
+                <button onclick="closeModal('modalChecklist')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            <form id="formChecklist" onsubmit="submitChecklist(event)" class="space-y-4">
+                <input type="text" id="c_nome" placeholder="Nome do Item (ex: Câmera 1)" class="ios-input" required>
+                <input type="number" id="c_qtd" placeholder="Quantidade" class="ios-input" required min="1">
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="c_btn_text">Adicionar</span>
+                    <i id="c_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Material -->
+    <div id="modalMaterial" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalMaterialTitle" class="text-xl font-bold">Vincular Material</h2>
+                <button onclick="closeModal('modalMaterial')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            <form id="formMaterial" onsubmit="submitMaterial(event)" class="space-y-4">
+                <input type="text" id="m_titulo" placeholder="Título da Pasta/Arquivo" class="ios-input" required>
+                <textarea id="m_desc" placeholder="Descrição do conteúdo..." class="ios-input h-20 resize-none" required></textarea>
+                <input type="url" id="m_link" placeholder="Link do Google Drive da Pasta" class="ios-input" required>
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="m_btn_text">Salvar Vínculo</span>
+                    <i id="m_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL GALERIA DE ARQUIVOS (NOVO) -->
+    <div id="modalGallery" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col">
+        <!-- Header Galeria -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-300 dark:border-gray-800 pt-safe-top glass-panel relative z-10">
+            <button onclick="closeGallery()" class="text-iosBlue flex items-center gap-1 font-medium active:opacity-70 transition-opacity">
+                <i class="ph-bold ph-caret-left text-xl"></i> Voltar
+            </button>
+            <h2 id="galleryTitle" class="font-bold text-lg truncate flex-1 text-center px-2">Arquivos</h2>
+            <div class="w-16"></div> <!-- Espaçador para centralizar título -->
+        </div>
+
+        <!-- Conteúdo Grid -->
+        <div id="galleryGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-safe-bottom content-start">
+            <!-- Arquivos preenchidos pelo JS -->
+        </div>
+    </div>
+
+    <!-- MODAL PREVIEW DO ARQUIVO (NOVO) -->
+    <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col">
+        <!-- Header Preview -->
+        <div class="flex items-center justify-between px-4 py-3 pt-safe-top w-full z-10 shrink-0">
+            <button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white">
+                <i class="ph-bold ph-x text-xl"></i>
+            </button>
+            <a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2 shadow-lg">
+                <i class="ph-bold ph-download-simple"></i> Baixar
+            </a>
+        </div>
+
+        <!-- Mídia -->
+        <div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative">
+            <!-- Imagem ou Vídeo inserido pelo JS -->
+        </div>
+        
+        <!-- Info Bottom -->
+        <div class="w-full p-6 pb-safe-bottom shrink-0">
+            <h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome do Arquivo</h3>
+            <p id="previewType" class="text-gray-400 text-sm">Tamanho / Tipo</p>
+        </div>
+    </div>
+
+
+    <!-- SCRIPTS -->
+    <script>
+        /**
+         * CONFIGURAÇÃO IMPORTANTE:
+         * Cole aqui a URL do Web App gerada no Google Apps Script.
+         */
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxStlNozLTkpHekE4D_1cjy7IYkt6cyYoJas42qA3EOJUGot-TiXx9pYWRW6_EZgpDF/exec"; 
+
+        // Estado da Aplicação
+        let editingItemId = null;
+        let currentGalleryFiles = []; // Guarda os arquivos da galeria atual aberta
+        let appState = {
+            currentTab: 'inicio',
+            tarefas: [],
+            checklist: [],
+            materiais: []
+        };
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = async () => {
+            const minWait = new Promise(resolve => setTimeout(resolve, 1500));
+            const dataFetch = fetchData();
+            await Promise.all([minWait, dataFetch]);
+            renderAll(); 
+
+            const splash = document.getElementById('splashScreen');
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; }, 700);
+        };
+
+        // --- NAVEGAÇÃO ---
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'text-iosBlue');
+                el.classList.add('text-gray-400');
+                if(el.dataset.tab === tabName) {
+                    el.classList.add('active', 'text-iosBlue');
+                    el.classList.remove('text-gray-400');
+                }
+            });
+
+            const titles = {
+                'inicio': 'Início', 'tarefas': 'Tarefas', 'concluidas': 'Concluídas', 'checklist': 'Checklist', 'materiais': 'Materiais'
+            };
+            document.getElementById('headerTitle').innerText = titles[tabName];
+
+            const btn = document.getElementById('mainAddBtn');
+            btn.style.transform = 'scale(0.8)';
+            setTimeout(() => btn.style.transform = 'scale(1)', 150);
+            
+            if(tabName === 'concluidas') { btn.style.display = 'none'; } 
+            else { btn.style.display = 'flex'; }
+
+            renderAll();
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function renderAll() {
+            renderDashboard();
+            renderTarefas();
+            renderConcluidas();
+            renderChecklist();
+            renderMateriais();
+        }
+
+        function renderDashboard() {
+            const total = appState.tarefas.length;
+            const concluidas = appState.tarefas.filter(t => t.status === 'concluida').length;
+            const pendentes = total - concluidas;
+            const percent = total === 0 ? 0 : Math.round((concluidas / total) * 100);
+
+            document.getElementById('dashPercent').innerText = `${percent}%`;
+            document.getElementById('dashCompleted').innerText = concluidas;
+            document.getElementById('dashTotal').innerText = total;
+            document.getElementById('dashPendenteCount').innerText = pendentes;
+            document.getElementById('dashConcluidaCount').innerText = concluidas;
+
+            const circle = document.getElementById('progressCircle');
+            const circumference = 40 * 2 * Math.PI; 
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function renderTarefas() {
+            const list = document.getElementById('tarefasList');
+            const pendentes = appState.tarefas.filter(t => t.status !== 'concluida');
+            
+            if(pendentes.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-10"><i class="ph-thin ph-check-circle text-6xl mb-2"></i><p>Tudo limpo por aqui!</p></div>`;
+                return;
+            }
+
+            list.innerHTML = pendentes.map(t => `
+                <div class="glass-panel ios-card p-5 flex gap-4 items-start relative">
+                    <button onclick="toggleTarefaStatus('${t.id}', 'concluida')" class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 flex-shrink-0 flex items-center justify-center hover:border-iosGreen transition-colors"></button>
+                    <div class="flex-1 pr-8">
+                        <h4 class="font-bold text-lg leading-tight">${t.nome}</h4>
+                        <p class="text-gray-500 text-sm mt-1 mb-3">${t.descricao}</p>
+                        <div class="flex items-center gap-3 text-xs font-semibold">
+                            <span class="bg-blue-100 text-iosBlue dark:bg-blue-900/40 px-2 py-1 rounded-md flex items-center gap-1"><i class="ph-bold ph-user"></i> ${t.responsavel}</span>
+                            <span class="bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded-md flex items-center gap-1"><i class="ph-bold ph-calendar"></i> ${formatarData(t.prazo)}</span>
+                        </div>
+                    </div>
+                    <button onclick="openEditTarefa('${t.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderConcluidas() {
+            const list = document.getElementById('concluidasList');
+            const concluidas = appState.tarefas.filter(t => t.status === 'concluida');
+            
+            if(concluidas.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-10"><p>Nenhuma tarefa concluída ainda.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = concluidas.map(t => `
+                <div class="glass-panel ios-card p-5 flex gap-4 items-start opacity-70">
+                    <button onclick="toggleTarefaStatus('${t.id}', 'pendente')" class="w-6 h-6 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center">
+                        <i class="ph-bold ph-check text-xs"></i>
+                    </button>
+                    <div class="flex-1 line-through text-gray-500">
+                        <h4 class="font-bold text-lg leading-tight">${t.nome}</h4>
+                        <div class="flex items-center gap-3 text-xs font-semibold mt-2 no-underline">
+                            <span class="px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-800">${t.responsavel}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderChecklist() {
+            const list = document.getElementById('checklistList');
+            if(appState.checklist.length === 0) {
+                list.innerHTML = `<div class="p-6 text-center text-gray-400">Checklist vazio</div>`;
+                return;
+            }
+
+            list.innerHTML = appState.checklist.map(c => `
+                <div class="p-4 flex items-center justify-between hover:bg-white/40 dark:hover:bg-black/20 transition-colors group">
+                    <div class="flex items-center gap-4 cursor-pointer flex-1" onclick="toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')">
+                        <div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition-colors">
+                            ${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                        </div>
+                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>
+                        <button onclick="openEditChecklist('${c.id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMateriais() {
+            const list = document.getElementById('materiaisList');
+            if(appState.materiais.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Nenhum material vinculado</div>`;
+                return;
+            }
+
+            list.innerHTML = appState.materiais.map(m => `
+                <div class="glass-panel ios-card p-5 relative cursor-pointer" onclick="openGallery('${m.id}')">
+                    <button onclick="event.stopPropagation(); openEditMaterial('${m.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors z-10">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                    </button>
+                    <div class="block hover:scale-[0.98] transition-transform pr-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-4 shadow-md">
+                            <i class="ph-fill ph-images text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg text-gray-900 dark:text-white">${m.titulo}</h4>
+                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao}</p>
+                        <p class="text-iosBlue text-xs font-semibold mt-3 flex items-center gap-1"><i class="ph-bold ph-folder-open"></i> Abrir Galeria</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- SISTEMA DE GALERIA E PREVIEW (NOVO) ---
+        
+        async function openGallery(materialId) {
+            const mat = appState.materiais.find(m => m.id === materialId);
+            if(!mat) return;
+            
+            document.getElementById('galleryTitle').innerText = mat.titulo;
+            document.getElementById('modalGallery').classList.add('active');
+            
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+                                <i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i>
+                                <p class="text-sm">Buscando arquivos da pasta...</p>
+                              </div>`;
+
+            const linkFolder = mat.linkDrive || mat.linkdrive;
+
+            // Busca os arquivos na API (Code.gs precisa ter o suporte 'getDriveFiles')
+            const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder });
+            
+            if(res.success && res.files && res.files.length > 0) {
+                currentGalleryFiles = res.files;
+                renderGalleryGrid(currentGalleryFiles);
+            } else if (res.success && res.files && res.files.length === 0) {
+                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
+            } else {
+                // MOSTRA O ERRO REAL EM VEZ DO MOCK DE DEMONSTRAÇÃO
+                console.error("Erro na Galeria:", res.error);
+                grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 px-6 text-center">
+                        <i class="ph-bold ph-warning text-5xl mb-3 text-red-500"></i>
+                        <h3 class="font-bold text-gray-800 dark:text-gray-200 mb-1">Não foi possível carregar</h3>
+                        <p class="text-sm text-gray-500 mb-4">${res.error || 'Erro de comunicação com a Planilha.'}</p>
+                        <p class="text-xs text-gray-400 bg-gray-200 dark:bg-gray-800 p-3 rounded-lg text-left">
+                            <b>Dica:</b> Lembre-se de ir ao Google Apps Script > Implantar > Gerir Implantações > Editar > <b>Nova Versão</b> > Implantar.
+                        </p>
+                    </div>`;
+            }
+        }
+
+        function renderGalleryGrid(files) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = files.map((file, index) => {
+                const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+                const icon = isVideo ? 'ph-video-camera' : 'ph-image';
+                const bgColors = isVideo ? 'from-gray-700 to-gray-900' : 'from-iosBlue to-blue-800';
+                
+                // CRUCIAL: Usa o ID do arquivo para gerar o link direto do Google Drive, contornando o bloqueio de visualização
+                const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                
+                // Agora puxamos a capa (thumbnail) diretamente do Google Drive para vídeos e imagens
+                const thumbUrl = (file.url.includes('drive.google.com') && file.id) ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w500` : directUrl;
+                const bgStyle = file.id ? `background-image: url('${thumbUrl}'); background-size: cover; background-position: center;` : '';
+
+                return `
+                <div onclick="openPreview(${index})" class="aspect-square rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer" style="${bgStyle}">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                    ${!bgStyle ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-white/50"><i class="ph-fill ${icon} text-4xl mb-2"></i></div>` : ''}
+                    ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
+                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent">
+                        <p class="text-white text-[11px] font-semibold truncate" title="${file.name}">${file.name}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function closeGallery() {
+            document.getElementById('modalGallery').classList.remove('active');
+            currentGalleryFiles = []; // Limpa memória
+        }
+
+        function openPreview(fileIndex) {
+            const file = currentGalleryFiles[fileIndex];
+            if(!file) return;
+
+            const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+            const container = document.getElementById('previewMediaContainer');
+            
+            // Limpa container anterior
+            container.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-4xl text-white"></i>`;
+            
+            document.getElementById('modalPreview').classList.add('active');
+            document.getElementById('previewFilename').innerText = file.name;
+            document.getElementById('previewType').innerText = isVideo ? 'Vídeo' : 'Imagem';
+            
+            const downloadBtn = document.getElementById('btnDownloadPreview');
+            // Mantém o link de download seguro
+            downloadBtn.href = file.downloadUrl || (file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=download&id=${file.id}` : file.url); 
+            downloadBtn.download = file.name;
+
+            // Insere mídia com player correto para vídeo
+            setTimeout(() => {
+                if (isVideo) {
+                    if (file.url.includes('drive.google.com') && file.id) {
+                        // Utiliza o player nativo do Google Drive em iframe para evitar bloqueio
+                        container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`;
+                    } else {
+                        container.innerHTML = `<video src="${file.url}" controls autoplay playsinline class="w-full max-h-full object-contain"></video>`;
+                    }
+                } else {
+                    const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                    container.innerHTML = `<img src="${directUrl}" alt="${file.name}" class="w-full max-h-full object-contain">`;
+                }
+            }, 300);
+        }
+
+        function closePreview() {
+            document.getElementById('modalPreview').classList.remove('active');
+            // Interrompe o vídeo ao fechar
+            setTimeout(() => {
+                document.getElementById('previewMediaContainer').innerHTML = '';
+            }, 300);
+        }
+
+        // --- INTERAÇÕES E MODAIS PADRÃO ---
+        function openContextModal() {
+            const tab = appState.currentTab;
+            if(tab === 'inicio' || tab === 'tarefas') openModal('modalTarefa');
+            else if(tab === 'checklist') openModal('modalChecklist');
+            else if(tab === 'materiais') openModal('modalMaterial');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            const formMap = {
+                'modalTarefa': 'formTarefa',
+                'modalChecklist': 'formChecklist',
+                'modalMaterial': 'formMaterial'
+            };
+            document.getElementById(formMap[id]).reset();
+            editingItemId = null;
+            if(id === 'modalTarefa') {
+                document.getElementById('modalTarefaTitle').innerText = 'Nova Tarefa';
+                document.getElementById('t_btn_text').innerText = 'Salvar Tarefa';
+            } else if(id === 'modalChecklist') {
+                document.getElementById('modalChecklistTitle').innerText = 'Adicionar ao Checklist';
+                document.getElementById('c_btn_text').innerText = 'Adicionar';
+            } else if(id === 'modalMaterial') {
+                document.getElementById('modalMaterialTitle').innerText = 'Vincular Material';
+                document.getElementById('m_btn_text').innerText = 'Salvar Vínculo';
+            }
+        }
+
+        function openEditTarefa(id) {
+            const item = appState.tarefas.find(t => t.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalTarefaTitle').innerText = 'Editar Tarefa';
+            document.getElementById('t_nome').value = item.nome;
+            document.getElementById('t_desc').value = item.descricao;
+            document.getElementById('t_resp').value = item.responsavel;
+            document.getElementById('t_prazo').value = item.prazo ? String(item.prazo).split('T')[0] : '';
+            document.getElementById('t_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalTarefa');
+        }
+
+        function openEditChecklist(id) {
+            const item = appState.checklist.find(c => c.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalChecklistTitle').innerText = 'Editar Item';
+            document.getElementById('c_nome').value = item.nome;
+            document.getElementById('c_qtd').value = item.quantidade;
+            document.getElementById('c_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalChecklist');
+        }
+
+        function openEditMaterial(id) {
+            const item = appState.materiais.find(m => m.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalMaterialTitle').innerText = 'Editar Material';
+            document.getElementById('m_titulo').value = item.titulo;
+            document.getElementById('m_desc').value = item.descricao;
+            document.getElementById('m_link').value = item.linkDrive || item.linkdrive || '';
+            document.getElementById('m_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalMaterial');
+        }
+
+        // --- COMUNICAÇÃO COM API ---
+        async function apiRequest(payload) {
+            if(!WEB_APP_URL) {
+                return new Promise(resolve => setTimeout(() => resolve({success: true, id: 'id_' + Date.now()}), 500));
+            }
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("Erro na API:", error);
+                return { success: false, error };
+            }
+        }
+
+        async function fetchData() {
+            if(!WEB_APP_URL) return; 
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getAll`);
+                const data = await response.json();
+                if(data.tarefas) {
+                    appState = { ...appState, ...data };
+                    renderAll();
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+            }
+        }
+
+        function setBtnLoading(btnPrefix, isLoading) {
+            const text = document.getElementById(`${btnPrefix}_text`);
+            const spin = document.getElementById(`${btnPrefix}_spin`);
+            if(isLoading) {
+                text.classList.add('hidden');
+                spin.classList.remove('hidden');
+            } else {
+                text.classList.remove('hidden');
+                spin.classList.add('hidden');
+            }
+        }
+
+        async function submitTarefa(e) {
+            e.preventDefault();
+            setBtnLoading('t_btn', true);
+            const tarefaData = {
+                nome: document.getElementById('t_nome').value,
+                descricao: document.getElementById('t_desc').value,
+                responsavel: document.getElementById('t_resp').value,
+                prazo: document.getElementById('t_prazo').value
+            };
+            if (editingItemId) {
+                tarefaData.id = editingItemId;
+                const res = await apiRequest({ action: 'editTarefa', data: tarefaData });
+                if(res.success) {
+                    const idx = appState.tarefas.findIndex(t => t.id === editingItemId);
+                    appState.tarefas[idx] = { ...appState.tarefas[idx], ...tarefaData };
+                    closeModal('modalTarefa'); renderAll();
+                } else { alert("Erro ao editar tarefa"); }
+            } else {
+                tarefaData.status = 'pendente';
+                const res = await apiRequest({ action: 'addTarefa', data: tarefaData });
+                if(res.success) {
+                    tarefaData.id = res.id; appState.tarefas.push(tarefaData);
+                    closeModal('modalTarefa'); renderAll();
+                } else { alert("Erro ao salvar tarefa"); }
+            }
+            setBtnLoading('t_btn', false);
+        }
+
+        async function submitChecklist(e) {
+            e.preventDefault();
+            setBtnLoading('c_btn', true);
+            const itemData = {
+                nome: document.getElementById('c_nome').value,
+                quantidade: document.getElementById('c_qtd').value
+            };
+            if (editingItemId) {
+                itemData.id = editingItemId;
+                const res = await apiRequest({ action: 'editChecklist', data: itemData });
+                if(res.success) {
+                    const idx = appState.checklist.findIndex(c => c.id === editingItemId);
+                    appState.checklist[idx] = { ...appState.checklist[idx], ...itemData };
+                    closeModal('modalChecklist'); renderAll();
+                } else { alert("Erro ao editar checklist"); }
+            } else {
+                itemData.status = 'pendente';
+                const res = await apiRequest({ action: 'addChecklist', data: itemData });
+                if(res.success) {
+                    itemData.id = res.id; appState.checklist.push(itemData);
+                    closeModal('modalChecklist'); renderAll();
+                } else { alert("Erro ao adicionar checklist"); }
+            }
+            setBtnLoading('c_btn', false);
+        }
+
+        async function submitMaterial(e) {
+            e.preventDefault();
+            setBtnLoading('m_btn', true);
+            const matData = {
+                titulo: document.getElementById('m_titulo').value,
+                descricao: document.getElementById('m_desc').value,
+                linkDrive: document.getElementById('m_link').value
+            };
+            if (editingItemId) {
+                matData.id = editingItemId;
+                const res = await apiRequest({ action: 'editMaterial', data: matData });
+                if(res.success) {
+                    const idx = appState.materiais.findIndex(m => m.id === editingItemId);
+                    appState.materiais[idx] = { ...appState.materiais[idx], ...matData };
+                    closeModal('modalMaterial'); renderAll();
+                } else { alert("Erro ao editar material"); }
+            } else {
+                const res = await apiRequest({ action: 'addMaterial', data: matData });
+                if(res.success) {
+                    matData.id = res.id; appState.materiais.push(matData);
+                    closeModal('modalMaterial'); renderAll();
+                } else { alert("Erro ao vincular material"); }
+            }
+            setBtnLoading('m_btn', false);
+        }
+
+        async function toggleTarefaStatus(id, newStatus) {
+            const index = appState.tarefas.findIndex(t => t.id === id);
+            if(index > -1) {
+                appState.tarefas[index].status = newStatus;
+                renderAll();
+                await apiRequest({ action: 'updateTarefaStatus', data: { id, status: newStatus } });
+            }
+        }
+
+        async function toggleChecklistStatus(id, newStatus) {
+            const index = appState.checklist.findIndex(c => c.id === id);
+            if(index > -1) {
+                appState.checklist[index].status = newStatus;
+                renderChecklist(); 
+                await apiRequest({ action: 'updateChecklistStatus', data: { id, status: newStatus } });
+            }
+        }
+
+        function formatarData(dataString) {
+            if(!dataString) return '';
+            let d = String(dataString);
+            if(d.indexOf('T') === -1) d += 'T00:00:00'; 
+            const data = new Date(d);
+            if (isNaN(data.getTime())) return 'Data Inválida';
+            return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+        }
+
+    </script>
+</body>
+</html>
