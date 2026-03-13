@@ -481,6 +481,7 @@
         let editingItemId = null;
         let currentGalleryFiles = [];
         let currentUser = null; 
+        let galleryCache = {}; // Armazena as fotos já carregadas
 
         // Estado Global
         let appState = { 
@@ -625,6 +626,7 @@
         async function forceSync() {
             const icon = document.getElementById('syncIcon');
             if(icon) icon.classList.add('animate-spin');
+            galleryCache = {}; // Limpa o cache ao forçar sincronização
             await fetchData();
             if(icon) icon.classList.remove('animate-spin');
         }
@@ -1165,15 +1167,30 @@
             document.getElementById('galleryTitle').innerText = mat.titulo;
             document.getElementById('modalGallery').classList.add('active');
             const grid = document.getElementById('galleryGrid');
+
+            // Verifica o cache primeiro
+            if (galleryCache[materialId]) {
+                currentGalleryFiles = galleryCache[materialId];
+                if (currentGalleryFiles.length > 0) {
+                    renderGalleryGrid(currentGalleryFiles);
+                } else {
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
+                }
+                return; // Impede nova requisição
+            }
+
             grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i><p class="text-sm">Buscando arquivos...</p></div>`;
 
             const linkFolder = mat.linkDrive || mat.linkdrive;
             const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder });
             
             if(res.success && res.files && res.files.length > 0) {
-                currentGalleryFiles = res.files; renderGalleryGrid(currentGalleryFiles);
+                currentGalleryFiles = res.files;
+                galleryCache[materialId] = currentGalleryFiles; // Salva no cache
+                renderGalleryGrid(currentGalleryFiles);
             } else if (res.success && res.files && res.files.length === 0) {
-                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
+                galleryCache[materialId] = []; // Salva no cache para não buscar de novo atoa
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
             } else {
                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><i class="ph-bold ph-warning text-4xl mb-3 text-red-500"></i><p>${res.error}</p></div>`;
             }
@@ -1185,16 +1202,28 @@
                 const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
                 const icon = isVideo ? 'ph-video-camera' : 'ph-image';
                 const bgColors = isVideo ? 'from-gray-700 to-gray-900' : 'from-iosBlue to-blue-800';
-                const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
-                const thumbUrl = (file.url.includes('drive.google.com') && file.id) ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w500` : directUrl;
-                const bgStyle = file.id ? `background-image: url('${thumbUrl}'); background-size: cover; background-position: center;` : '';
+                
+                let thumbUrl = file.url;
+                if (file.url.includes('drive.google.com') && file.id) {
+                    thumbUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
+                }
 
+                // Usamos w-full pt-[100%] e absolute inset-0 para manter o aspecto quadrado mesmo em iOS antigos
                 return `
-                <div onclick="openPreview(${index})" class="aspect-square rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer" style="${bgStyle}">
-                    <div class="absolute inset-0 bg-black/20"></div>
-                    ${!bgStyle ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-white/50"><i class="ph-fill ${icon} text-4xl mb-2"></i></div>` : ''}
-                    ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
-                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent"><p class="text-white text-[11px] font-semibold truncate">${file.name}</p></div>
+                <div onclick="openPreview(${index})" class="rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer w-full pt-[100%]">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        ${(file.id && !isVideo) ? `<img src="${thumbUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">` : ''}
+                        
+                        <div class="absolute inset-0 bg-black/20"></div>
+                        
+                        ${isVideo || !file.id ? `<i class="ph-fill ${icon} text-4xl mb-2 text-white/50 relative z-10"></i>` : ''}
+                        
+                        ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1 z-10"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
+                        
+                        <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent z-10">
+                            <p class="text-white text-[11px] font-semibold truncate">${file.name}</p>
+                        </div>
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -1218,12 +1247,21 @@
             document.getElementById('btnDownloadPreview').download = file.name;
 
             setTimeout(() => {
-                if (isVideo) {
-                    if (file.url.includes('drive.google.com') && file.id) { container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`; } 
-                    else { container.innerHTML = `<video src="${file.url}" controls autoplay playsinline class="w-full max-h-full object-contain"></video>`; }
+                if (file.url.includes('drive.google.com') && file.id) { 
+                    if (isVideo) {
+                        // Vídeo no Drive: melhor usar iframe player do Drive
+                        container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`;
+                    } else {
+                        // Imagem no Drive: usa lh3 ou iframe em caso de bloqueio
+                        const imgUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
+                        container.innerHTML = `<img src="${imgUrl}" alt="${file.name}" class="w-full max-h-full object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<iframe src=\\'https://drive.google.com/file/d/${file.id}/preview\\' class=\\'w-full h-full border-0\\' allow=\\'fullscreen\\'></iframe>';">`;
+                    }
                 } else {
-                    const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
-                    container.innerHTML = `<img src="${directUrl}" alt="${file.name}" class="w-full max-h-full object-contain">`;
+                    if (isVideo) {
+                        container.innerHTML = `<video src="${file.url}" controls autoplay playsinline class="w-full max-h-full object-contain"></video>`;
+                    } else {
+                        container.innerHTML = `<img src="${file.url}" alt="${file.name}" class="w-full max-h-full object-contain">`;
+                    }
                 }
             }, 300);
         }
