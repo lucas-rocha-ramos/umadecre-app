@@ -25,15 +25,10 @@
                 extend: {
                     fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'] },
                     colors: { iosBlue: '#007AFF', iosGreen: '#34C759', iosGray: '#F2F2F7', iosDarkGray: '#1C1C1E' },
-                    animation: { 
-                        'spring-up': 'springUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards', 
-                        'fade-in': 'fadeIn 0.4s ease-out forwards',
-                        'slide-down': 'slideDown 0.4s ease-out forwards'
-                    },
+                    animation: { 'spring-up': 'springUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards', 'fade-in': 'fadeIn 0.4s ease-out forwards' },
                     keyframes: {
                         springUp: { '0%': { transform: 'translateY(100%)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } },
-                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
-                        slideDown: { '0%': { transform: 'translateY(-100%)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } }
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } }
                     }
                 }
             }
@@ -81,7 +76,11 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .progress-ring__circle { transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1); transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
 
         .nav-item.active { color: #007AFF; }
         .dark .nav-item.active { color: #0A84FF; }
@@ -103,21 +102,9 @@
         .dark .ios-input:focus { background: rgba(118, 118, 128, 0.35); }
 
         .aspect-square { aspect-ratio: 1 / 1; }
-
-        /* Toast Notifications */
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast { background: rgba(28, 28, 30, 0.9); color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(10px); animation: slideDown 0.3s ease-out forwards; display: flex; items-center gap: 8px; }
-        .dark .toast { background: rgba(255, 255, 255, 0.9); color: black; }
     </style>
 </head>
 <body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
-
-    <!-- AUDIO EFFECTS -->
-    <audio id="sound-notify" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-    <audio id="sound-success" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" preload="auto"></audio>
-
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container" class="pt-safe-top"></div>
 
     <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
@@ -128,198 +115,176 @@
         <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
     </div>
 
-    <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="fixed inset-0 z-[90] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center px-6 transition-opacity duration-500">
-        <div class="w-full max-w-sm">
-            <div class="flex justify-center mb-8"><img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-32 h-32 object-contain" alt="Logo"></div>
-            <h2 class="text-3xl font-extrabold mb-2 text-center">Bem-vindo</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-center mb-8">Faça login para aceder ao sistema</p>
-            
-            <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="email" id="loginEmail" placeholder="E-mail" class="ios-input" required>
-                <input type="password" id="loginPassword" placeholder="Senha" class="ios-input" required>
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-2 active:scale-95 transition-transform">Entrar</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- 2FA CODE SCREEN -->
-    <div id="authCodeScreen" class="fixed inset-0 z-[95] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center px-6 transition-opacity duration-500 hidden opacity-0">
-        <div class="w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-blue-100 text-iosBlue rounded-full flex items-center justify-center mx-auto mb-6"><i class="ph-bold ph-shield-check text-3xl"></i></div>
-            <h2 class="text-2xl font-extrabold mb-2">Verificação</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-8 text-sm">Enviámos um código de 4 dígitos para o seu e-mail.</p>
-            
-            <form id="formAuth" onsubmit="handleAuthCode(event)" class="space-y-6">
-                <div class="flex justify-center gap-3">
-                    <input type="text" id="code1" maxlength="1" class="ios-input w-14 h-16 text-center text-2xl font-bold p-0" onkeyup="moveToNext(this, 'code2')" required>
-                    <input type="text" id="code2" maxlength="1" class="ios-input w-14 h-16 text-center text-2xl font-bold p-0" onkeyup="moveToNext(this, 'code3')" required>
-                    <input type="text" id="code3" maxlength="1" class="ios-input w-14 h-16 text-center text-2xl font-bold p-0" onkeyup="moveToNext(this, 'code4')" required>
-                    <input type="text" id="code4" maxlength="1" class="ios-input w-14 h-16 text-center text-2xl font-bold p-0" required>
-                </div>
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg active:scale-95 transition-transform">Verificar</button>
-            </form>
-        </div>
-    </div>
-
     <!-- BOTÃO ADICIONAR FLUTUANTE (FAB) -->
-    <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all hidden">
+    <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all">
         <i class="ph-bold ph-plus text-2xl"></i>
     </button>
 
-    <!-- APP CONTENT (Oculto inicialmente) -->
-    <div id="appContainer" class="hidden opacity-0 transition-opacity duration-500">
-        <main class="pt-safe-top px-4 max-w-3xl mx-auto min-h-screen pb-40 pt-8">
+    <!-- MAIN CONTENT AREA -->
+    <!-- Adicionado pt-safe-top e pb-40 para o conteúdo não esconder atrás dos botões inferiores -->
+    <main class="pt-safe-top px-4 max-w-3xl mx-auto min-h-screen pb-40 pt-8">
+        
+        <!-- 1. INÍCIO (Dashboard) -->
+        <div id="view-inicio" class="view-section space-y-6">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
+            <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
+                    <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
+                    <p class="text-sm text-gray-500 mt-2"><span id="dashCompleted">0</span> de <span id="dashTotal">0</span> tarefas</p>
+                </div>
+                <div class="relative w-28 h-28">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200 dark:text-gray-800 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                        <circle id="progressCircle" class="text-iosBlue stroke-current progress-ring__circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                    </svg>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mt-8 mb-4 px-2">Resumo</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('tarefas')">
+                    <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-clock text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Pendentes</p>
+                    <p class="text-2xl font-bold" id="dashPendenteCount">0</p>
+                </div>
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('concluidas')">
+                    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-check-circle text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Concluídas</p>
+                    <p class="text-2xl font-bold" id="dashConcluidaCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TAREFAS -->
+        <div id="view-tarefas" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Tarefas</h1>
+            <div id="tarefasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 3. CONCLUÍDAS -->
+        <div id="view-concluidas" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
+            <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
+            <div id="concluidasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 4. CHECKLIST -->
+        <div id="view-checklist" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
+            <div class="glass-panel ios-card overflow-hidden">
+                <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MATERIAIS -->
+        <div id="view-materiais" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
+            <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
+            <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 6. CONFIGURAÇÕES (NOVO) -->
+        <div id="view-config" class="view-section hidden space-y-6">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
             
-            <!-- HEADER DE UTILIZADOR (Perfil) -->
-            <div class="flex items-center justify-between mb-8 cursor-pointer" onclick="openMyProfile()">
-                <div class="flex items-center gap-3">
-                    <img id="headerUserAvatar" src="" class="w-12 h-12 rounded-full object-cover bg-gray-200 border-2 border-transparent hover:border-iosBlue transition-all">
-                    <div>
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-widest">Olá,</p>
-                        <h2 id="headerUserName" class="text-xl font-bold leading-tight">Usuário</h2>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 1. INÍCIO (Dashboard) -->
-            <div id="view-inicio" class="view-section space-y-6">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
-                <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
-                        <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
-                        <p class="text-sm text-gray-500 mt-2"><span id="dashCompleted">0</span> de <span id="dashTotal">0</span> tarefas</p>
-                    </div>
-                    <div class="relative w-28 h-28">
-                        <svg class="w-full h-full" viewBox="0 0 100 100">
-                            <circle class="text-gray-200 dark:text-gray-800 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
-                            <circle id="progressCircle" class="text-iosBlue stroke-current progress-ring__circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
-                        </svg>
-                    </div>
-                </div>
-
-                <h3 class="text-xl font-bold mt-8 mb-4 px-2">As Minhas Pendências</h3>
-                <div id="myPendingTasks" class="space-y-3">
-                    <!-- Tarefas da pessoa -->
-                </div>
-            </div>
-
-            <!-- 2. TAREFAS -->
-            <div id="view-tarefas" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Tarefas (Geral)</h1>
-                <div id="tarefasList" class="space-y-4"></div>
-            </div>
-
-            <!-- 3. CONCLUÍDAS -->
-            <div id="view-concluidas" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
-                <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
-                <div id="concluidasList" class="space-y-4"></div>
-            </div>
-
-            <!-- 4. CHECKLIST -->
-            <div id="view-checklist" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
-                <div class="glass-panel ios-card overflow-hidden">
-                    <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800"></div>
-                </div>
-            </div>
-
-            <!-- 5. MATERIAIS -->
-            <div id="view-materiais" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
-                <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
-                <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-            </div>
-
-            <!-- 6. CONFIGURAÇÕES -->
-            <div id="view-config" class="view-section hidden space-y-6">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
-                
-                <div class="glass-panel ios-card p-5 space-y-6">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center"><i id="themeIcon" class="ph-bold ph-moon text-xl"></i></div>
-                            <div><p class="font-semibold text-[17px]">Modo Escuro</p><p class="text-xs text-gray-500">Alternar tema do aplicativo</p></div>
+            <div class="glass-panel ios-card p-5 space-y-6">
+                <!-- Alterar Tema -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center">
+                            <i id="themeIcon" class="ph-bold ph-moon text-xl"></i>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
-                        </label>
-                    </div>
-
-                    <hr class="border-gray-200 dark:border-gray-800">
-
-                    <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center"><i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i></div>
-                            <div><p class="font-semibold text-[17px]">Sincronizar Dados</p><p class="text-xs text-gray-500">Forçar atualização da planilha</p></div>
-                        </div>
-                        <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
-                    </div>
-
-                    <hr class="border-gray-200 dark:border-gray-800">
-
-                    <div class="flex items-center justify-between cursor-pointer text-red-500" onclick="logout()">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center"><i class="ph-bold ph-sign-out text-xl"></i></div>
-                            <div><p class="font-semibold text-[17px]">Terminar Sessão</p></div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Modo Escuro</p>
+                            <p class="text-xs text-gray-500">Alternar tema do aplicativo</p>
                         </div>
                     </div>
+                    <!-- Switch iOS Style -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
+                    </label>
                 </div>
 
-                <!-- ADMIN AREA -->
-                <div id="adminPanel" class="hidden">
-                    <h3 class="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3 px-2 mt-8">Administração</h3>
-                    <div class="glass-panel ios-card p-5">
-                        <div class="flex items-center justify-between cursor-pointer" onclick="openAdminTeam()">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 flex items-center justify-center"><i class="ph-bold ph-users text-xl"></i></div>
-                                <div><p class="font-semibold text-[17px]">Gerenciar Equipa</p><p class="text-xs text-gray-500">Criar utilizadores e permissões</p></div>
-                            </div>
-                            <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
+                <hr class="border-gray-200 dark:border-gray-800">
+
+                <!-- Sincronizar Dados -->
+                <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center">
+                            <i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Sincronizar Dados</p>
+                            <p class="text-xs text-gray-500">Forçar atualização da planilha</p>
                         </div>
                     </div>
-                </div>
-
-                <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
-                    <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
-                    <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                    <p class="text-[10px]">Versão 2.0 (Com Contas)</p>
+                    <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
                 </div>
             </div>
 
-        </main>
+            <!-- Informações App -->
+            <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
+                <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
+                <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
+                <p class="text-[10px]">Versão 1.2 • Atualizado</p>
+            </div>
+        </div>
 
-        <!-- BOTTOM NAVIGATION -->
-        <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-between items-center">
-            <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 flex-1 transition-colors" data-tab="inicio"><i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span></button>
-            <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 transition-colors" data-tab="tarefas"><i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[9px] font-semibold uppercase">Tarefas</span></button>
-            <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 transition-colors" data-tab="concluidas"><i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[9px] font-semibold uppercase">Feitas</span></button>
-            <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 transition-colors" data-tab="checklist"><i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[9px] font-semibold uppercase">Check</span></button>
-            <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 transition-colors" data-tab="materiais"><i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span></button>
-            <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 transition-colors" data-tab="config"><i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span></button>
-        </nav>
-    </div>
+    </main>
 
-    <!-- MODAIS DO SISTEMA -->
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-between items-center">
+        <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 flex-1 transition-colors" data-tab="inicio">
+            <i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span>
+        </button>
+        <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="tarefas">
+            <i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[9px] font-semibold uppercase">Tarefas</span>
+        </button>
+        <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas">
+            <i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[9px] font-semibold uppercase">Feitas</span>
+        </button>
+        <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist">
+            <i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[9px] font-semibold uppercase">Check</span>
+        </button>
+        <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais">
+            <i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span>
+        </button>
+        <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="config">
+            <i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span>
+        </button>
+    </nav>
 
-    <!-- Modal Tarefa (Atualizado para Fluxo de Etapas) -->
+    <!-- MODALS DE CRIAÇÃO/EDIÇÃO -->
+    
+    <!-- Modal Tarefa -->
     <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div class="modal-content w-full sm:w-[450px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
+        <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex justify-between items-center mb-6">
-                <h2 id="modalTarefaTitle" class="text-xl font-bold">Nova Tarefa com Fluxo</h2>
+                <h2 id="modalTarefaTitle" class="text-xl font-bold">Nova Tarefa</h2>
                 <button onclick="closeModal('modalTarefa')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
             </div>
             <form id="formTarefa" onsubmit="submitTarefa(event)" class="space-y-4">
-                <input type="text" id="t_nome" placeholder="Título da Tarefa (ex: Edição do Culto)" class="ios-input font-bold" required>
-                <textarea id="t_desc" placeholder="Instruções gerais..." class="ios-input h-16 resize-none" required></textarea>
+                <input type="text" id="t_nome" placeholder="Nome da Tarefa (ex: Edição do Culto)" class="ios-input" required>
+                <textarea id="t_desc" placeholder="Descrição detalhada..." class="ios-input h-20 resize-none" required></textarea>
                 
                 <div class="grid grid-cols-2 gap-3">
-                    <input type="date" id="t_prazo" class="ios-input" required>
-                    <select id="t_cat" class="ios-input appearance-none text-gray-700 dark:text-gray-200">
+                    <input type="text" id="t_resp" placeholder="Responsável" class="ios-input" required>
+                    <select id="t_cat" class="ios-input appearance-none bg-no-repeat bg-right text-gray-700 dark:text-gray-200" style="background-image: url('data:image/svg+xml;utf8,<svg fill=%22gray%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>'); background-position-x: 90%;">
                         <option value="Geral">🌐 Geral</option>
                         <option value="Câmera">🎥 Câmera</option>
                         <option value="Fotografia">📸 Fotografia</option>
@@ -328,145 +293,104 @@
                     </select>
                 </div>
 
-                <div class="mt-4 border-t border-gray-200 dark:border-gray-800 pt-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-bold text-gray-500 uppercase tracking-widest">Etapas do Fluxo</label>
-                        <button type="button" onclick="addEtapaToForm()" class="text-iosBlue text-sm font-bold flex items-center gap-1"><i class="ph-bold ph-plus-circle"></i> Adicionar Etapa</button>
-                    </div>
-                    <div id="t_etapas_container" class="space-y-2">
-                        <!-- Etapas dinâmicas geradas pelo JS -->
-                    </div>
-                </div>
+                <input type="date" id="t_prazo" class="ios-input" required>
                 
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-6 active:scale-95 transition-transform flex justify-center items-center gap-2">
-                    <span id="t_btn_text">Criar Fluxo</span>
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="t_btn_text">Salvar Tarefa</span>
                     <i id="t_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
                 </button>
                 <button type="button" onclick="confirmDelete('Tarefas')" id="btnDelTarefa" class="w-full py-3 rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-bold text-base active:scale-95 transition-transform hidden">
-                    Excluir Tarefa Inteira
+                    Excluir Tarefa
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Gestão Equipa (Admin) -->
-    <div id="modalAdminTeam" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col">
-        <div class="pt-safe-top glass-panel relative z-10 border-b border-gray-300 dark:border-gray-800">
-            <div class="flex items-center justify-between px-4 py-3">
-                <button onclick="closeAdminTeam()" class="text-iosBlue flex items-center gap-1 font-medium active:opacity-70 transition-opacity">
-                    <i class="ph-bold ph-caret-left text-xl"></i> Voltar
-                </button>
-                <h2 class="font-bold text-lg truncate flex-1 text-center px-2">Equipa</h2>
-                <button onclick="openModalAddUser()" class="text-iosBlue"><i class="ph-bold ph-user-plus text-2xl"></i></button>
-            </div>
-        </div>
-        <div id="adminUserList" class="flex-1 overflow-y-auto p-4 space-y-3 pb-safe-bottom">
-            <!-- Gerado via JS -->
-        </div>
-    </div>
-
-    <!-- Modal Novo Utilizador -->
-    <div id="modalAddUser" class="modal-overlay fixed inset-0 z-[65] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
-            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Cadastrar Utilizador</h2>
-                <button onclick="closeModalAddUser()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
-            </div>
-            <form onsubmit="submitNewUser(event)" class="space-y-3">
-                <input type="text" id="u_nome" placeholder="Nome Completo" class="ios-input" required>
-                <input type="email" id="u_email" placeholder="E-mail" class="ios-input" required>
-                <input type="text" id="u_senha" placeholder="Senha Temporária" class="ios-input" required>
-                <input type="url" id="u_foto" placeholder="Link da Foto (lh3.google... opcional)" class="ios-input text-sm">
-                
-                <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl">
-                    <p class="text-sm font-bold mb-3">Permissões de Edição/Criação</p>
-                    <label class="flex items-center gap-3 mb-2"><input type="checkbox" id="p_tarefas" class="w-5 h-5 rounded border-gray-300 text-iosBlue focus:ring-iosBlue"><span>Criar/Editar Tarefas</span></label>
-                    <label class="flex items-center gap-3 mb-2"><input type="checkbox" id="p_checklist" class="w-5 h-5 rounded border-gray-300 text-iosBlue focus:ring-iosBlue"><span>Gerir Checklist</span></label>
-                    <label class="flex items-center gap-3"><input type="checkbox" id="p_materiais" class="w-5 h-5 rounded border-gray-300 text-iosBlue focus:ring-iosBlue"><span>Gerir Materiais</span></label>
-                </div>
-                
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
-                    Enviar Convite
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Checklist e Materiais e Galerias (MANTIDOS ORIGINAIS NO CÓDIGO) -->
     <!-- Modal Checklist -->
     <div id="modalChecklist" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex justify-between items-center mb-6">
-                <h2 id="modalChecklistTitle" class="text-xl font-bold">Checklist</h2>
+                <h2 id="modalChecklistTitle" class="text-xl font-bold">Adicionar ao Checklist</h2>
                 <button onclick="closeModal('modalChecklist')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
             </div>
             <form id="formChecklist" onsubmit="submitChecklist(event)" class="space-y-4">
-                <input type="text" id="c_nome" placeholder="Item" class="ios-input" required>
-                <input type="number" id="c_qtd" placeholder="Qtd" class="ios-input" required min="1">
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform">Salvar</button>
-                <button type="button" onclick="confirmDelete('Checklist')" id="btnDelChecklist" class="w-full py-3 rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/30 hidden">Excluir</button>
+                <input type="text" id="c_nome" placeholder="Nome do Item (ex: Câmera 1)" class="ios-input" required>
+                <input type="number" id="c_qtd" placeholder="Quantidade" class="ios-input" required min="1">
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="c_btn_text">Adicionar</span>
+                    <i id="c_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+                <button type="button" onclick="confirmDelete('Checklist')" id="btnDelChecklist" class="w-full py-3 rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-bold text-base active:scale-95 transition-transform hidden">
+                    Excluir Item
+                </button>
             </form>
         </div>
     </div>
+
     <!-- Modal Material -->
     <div id="modalMaterial" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex justify-between items-center mb-6">
                 <h2 id="modalMaterialTitle" class="text-xl font-bold">Vincular Material</h2>
                 <button onclick="closeModal('modalMaterial')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
             </div>
             <form id="formMaterial" onsubmit="submitMaterial(event)" class="space-y-4">
-                <input type="text" id="m_titulo" placeholder="Título" class="ios-input" required>
-                <textarea id="m_desc" placeholder="Descrição" class="ios-input h-20" required></textarea>
-                <input type="url" id="m_link" placeholder="Link Drive" class="ios-input" required>
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform">Salvar</button>
-                <button type="button" onclick="confirmDelete('Materiais')" id="btnDelMaterial" class="w-full py-3 rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/30 hidden">Excluir</button>
+                <input type="text" id="m_titulo" placeholder="Título da Pasta/Arquivo" class="ios-input" required>
+                <textarea id="m_desc" placeholder="Descrição do conteúdo..." class="ios-input h-20 resize-none" required></textarea>
+                <input type="url" id="m_link" placeholder="Link do Google Drive da Pasta" class="ios-input" required>
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="m_btn_text">Salvar Vínculo</span>
+                    <i id="m_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+                <button type="button" onclick="confirmDelete('Materiais')" id="btnDelMaterial" class="w-full py-3 rounded-2xl bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-bold text-base active:scale-95 transition-transform hidden">
+                    Excluir Material
+                </button>
             </form>
         </div>
     </div>
-    
-    <!-- Galeria -->
+
+    <!-- MODAL GALERIA E PREVIEW (Mantidos iguais) -->
     <div id="modalGallery" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col">
         <div class="pt-safe-top glass-panel relative z-10 border-b border-gray-300 dark:border-gray-800">
             <div class="flex items-center justify-between px-4 py-3">
-                <button onclick="closeGallery()" class="text-iosBlue flex items-center gap-1 font-medium"><i class="ph-bold ph-caret-left text-xl"></i> Voltar</button>
-                <h2 id="galleryTitle" class="font-bold text-lg truncate flex-1 text-center px-2">Arquivos</h2><div class="w-16"></div>
+                <button onclick="closeGallery()" class="text-iosBlue flex items-center gap-1 font-medium active:opacity-70 transition-opacity">
+                    <i class="ph-bold ph-caret-left text-xl"></i> Voltar
+                </button>
+                <h2 id="galleryTitle" class="font-bold text-lg truncate flex-1 text-center px-2">Arquivos</h2>
+                <div class="w-16"></div>
             </div>
         </div>
         <div id="galleryGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-safe-bottom content-start"></div>
     </div>
+
     <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col">
         <div class="pt-safe-top w-full z-10 shrink-0">
             <div class="flex items-center justify-between px-4 py-3">
-                <button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white"><i class="ph-bold ph-x text-xl"></i></button>
-                <a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2"><i class="ph-bold ph-download-simple"></i> Baixar</a>
+                <button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+                <a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2 shadow-lg">
+                    <i class="ph-bold ph-download-simple"></i> Baixar
+                </a>
             </div>
         </div>
         <div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative"></div>
-        <div class="w-full p-6 pb-safe-bottom shrink-0"><h3 id="previewFilename" class="text-white font-semibold text-lg">Nome</h3><p id="previewType" class="text-gray-400 text-sm">Tipo</p></div>
+        <div class="w-full p-6 pb-safe-bottom shrink-0">
+            <h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome</h3>
+            <p id="previewType" class="text-gray-400 text-sm">Tipo</p>
+        </div>
     </div>
 
-    <!-- SCRIPTS CORE -->
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxStlNozLTkpHekE4D_1cjy7IYkt6cyYoJas42qA3EOJUGot-TiXx9pYWRW6_EZgpDF/exec"; 
 
-        // ESTADO GLOBAL + SIMULAÇÃO DE DADOS (Mock)
-        let appState = { 
-            currentTab: 'inicio', 
-            currentUser: null,
-            users: [
-                { id: 'u1', email: 'designer.br.vg@gmail.com', pass: 'admin123', nome: 'Administrador Geral', role: 'admin', foto: 'https://lh3.googleusercontent.com/a/ACg8ocK2Fw0tYVv6p8L2bXQW2bXQW2bXQW2bXQW2bXQW2bXQ=s96-c', perms: { tarefas: true, checklist: true, materiais: true } },
-                { id: 'u2', email: 'joao@umadecre.com', pass: '123456', nome: 'João (Captação)', role: 'user', foto: '', perms: { tarefas: false, checklist: false, materiais: true } },
-                { id: 'u3', email: 'maria@umadecre.com', pass: '123456', nome: 'Maria (Edição)', role: 'user', foto: '', perms: { tarefas: true, checklist: true, materiais: false } }
-            ],
-            tarefas: [
-                { id: 't1', nome: 'Gravação Congresso', descricao: 'Equipamento completo', prazo: '2026-10-15', categoria: 'Câmera', status: 'pendente', etapas: [{ id: 'e1', nome: 'Captação de Imagem', responsavelId: 'u2', status: 'pendente' }, { id: 'e2', nome: 'Edição Final', responsavelId: 'u3', status: 'pendente' }] }
-            ], 
-            checklist: [], 
-            materiais: [] 
-        };
+        let editingItemId = null;
+        let currentGalleryFiles = [];
+        let appState = { currentTab: 'inicio', tarefas: [], checklist: [], materiais: [] };
 
+        // Cores das Categorias
         const CAT_COLORS = {
             'Geral': 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
             'Câmera': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
@@ -475,316 +399,504 @@
             'Edição': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
         };
 
-        let tempAuthUser = null;
-        let editingItemId = null;
-
-        // INICIALIZAÇÃO
+        // --- INICIALIZAÇÃO ---
         window.onload = async () => {
+            atualizarIconeTema();
+            const minWait = new Promise(resolve => setTimeout(resolve, 1500));
+            const dataFetch = fetchData();
+            await Promise.all([minWait, dataFetch]);
+            renderAll(); 
             const splash = document.getElementById('splashScreen');
-            setTimeout(() => { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 700); }, 1500);
-            
-            // Verifica Sessão
-            const savedUser = localStorage.getItem('umadecre_user');
-            if(savedUser) {
-                appState.currentUser = JSON.parse(savedUser);
-                startApp();
-            }
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; }, 700);
         };
 
-        // --- SISTEMA DE AUTENTICAÇÃO ---
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPassword').value;
-            
-            const user = appState.users.find(u => u.email === email && u.pass === pass);
-            if(user) {
-                tempAuthUser = user;
-                showToast("Código de verificação (Mock: 1234) enviado para o e-mail!");
-                document.getElementById('loginScreen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loginScreen').classList.add('hidden');
-                    document.getElementById('authCodeScreen').classList.remove('hidden');
-                    document.getElementById('authCodeScreen').classList.remove('opacity-0');
-                    document.getElementById('code1').focus();
-                }, 500);
+        // --- SISTEMA DE TEMA ---
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
             } else {
-                showToast("E-mail ou senha incorretos.");
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            atualizarIconeTema();
+        }
+        function atualizarIconeTema() {
+            const icon = document.getElementById('themeIcon');
+            const checkbox = document.getElementById('themeToggleCheckbox');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            if(isDark) {
+                if(icon) icon.classList.replace('ph-moon', 'ph-sun');
+                if(checkbox) checkbox.checked = true;
+            } else {
+                if(icon) icon.classList.replace('ph-sun', 'ph-moon');
+                if(checkbox) checkbox.checked = false;
             }
         }
 
-        function moveToNext(current, nextFieldId) {
-            if(current.value.length === 1) document.getElementById(nextFieldId).focus();
+        // --- SYNC (PULL TO REFRESH) ---
+        async function forceSync() {
+            const icon = document.getElementById('syncIcon');
+            if(icon) icon.classList.add('animate-spin');
+            await fetchData();
+            if(icon) icon.classList.remove('animate-spin');
         }
 
-        function handleAuthCode(e) {
-            e.preventDefault();
-            const code = document.getElementById('code1').value + document.getElementById('code2').value + document.getElementById('code3').value + document.getElementById('code4').value;
+        // --- NAVEGAÇÃO ---
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
             
-            if(code === '1234') { // Mock para demonstração
-                appState.currentUser = tempAuthUser;
-                localStorage.setItem('umadecre_user', JSON.stringify(appState.currentUser));
-                
-                document.getElementById('authCodeScreen').style.opacity = '0';
-                playSound('success');
-                setTimeout(() => {
-                    document.getElementById('authCodeScreen').classList.add('hidden');
-                    startApp();
-                }, 500);
-            } else {
-                showToast("Código incorreto.");
-            }
-        }
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'text-iosBlue');
+                el.classList.add('text-gray-400');
+                if(el.dataset.tab === tabName) {
+                    el.classList.add('active', 'text-iosBlue');
+                    el.classList.remove('text-gray-400');
+                }
+            });
 
-        function startApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('appContainer').classList.remove('opacity-0');
-            
-            // Preenche dados do utilizador
-            document.getElementById('headerUserName').innerText = appState.currentUser.nome.split(' ')[0];
-            document.getElementById('headerUserAvatar').src = appState.currentUser.foto || `https://ui-avatars.com/api/?name=${appState.currentUser.nome}&background=random`;
-            
-            // Mostra Admin Panel se aplicável
-            if(appState.currentUser.role === 'admin') {
-                document.getElementById('adminPanel').classList.remove('hidden');
+            // Controle do botão flutuante de Adicionar
+            const btn = document.getElementById('mainAddBtn');
+            if(btn) {
+                btn.style.transform = 'scale(0.8)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 150);
+                if(tabName === 'concluidas' || tabName === 'config') { 
+                    btn.style.display = 'none'; 
+                } else { 
+                    btn.style.display = 'flex'; 
+                }
             }
 
             renderAll();
         }
 
-        function logout() {
-            localStorage.removeItem('umadecre_user');
-            location.reload();
+        // --- RENDERIZAÇÃO ---
+        function renderAll() {
+            renderDashboard(); renderTarefas(); renderConcluidas(); renderChecklist(); renderMateriais();
         }
 
-        // --- TOASTS & SOUNDS ---
-        function showToast(msg) {
-            const c = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.innerHTML = `<i class="ph-fill ph-info text-iosBlue text-lg"></i> ${msg}`;
-            c.appendChild(t);
-            setTimeout(() => t.remove(), 4000);
-        }
-        function playSound(type) {
-            try {
-                const aud = document.getElementById(type === 'success' ? 'sound-success' : 'sound-notify');
-                aud.currentTime = 0; aud.play();
-            } catch(e){}
-        }
-
-        // --- FLUXO DE TAREFAS E RENDERIZAÇÃO ---
         function renderDashboard() {
-            // ... MANTIDO IGUAL MAS ADICIONANDO "MINHAS TAREFAS"
             const total = appState.tarefas.length;
             const concluidas = appState.tarefas.filter(t => t.status === 'concluida').length;
             const percent = total === 0 ? 0 : Math.round((concluidas / total) * 100);
+
             document.getElementById('dashPercent').innerText = `${percent}%`;
             document.getElementById('dashCompleted').innerText = concluidas;
             document.getElementById('dashTotal').innerText = total;
             document.getElementById('dashPendenteCount').innerText = total - concluidas;
             document.getElementById('dashConcluidaCount').innerText = concluidas;
-            document.getElementById('progressCircle').style.strokeDashoffset = (40 * 2 * Math.PI) - (percent / 100) * (40 * 2 * Math.PI);
 
-            // Minhas Tarefas (Baseado na etapa atual que está pendente e assignada a mim)
-            const myTasksContainer = document.getElementById('myPendingTasks');
-            let myTasksHtml = '';
-            
-            appState.tarefas.forEach(t => {
-                if(t.status === 'concluida') return;
-                const etapaAtual = t.etapas.find(e => e.status === 'pendente');
-                if(etapaAtual && (etapaAtual.responsavelId === appState.currentUser.id || appState.currentUser.role === 'admin')) {
-                    const isMinha = etapaAtual.responsavelId === appState.currentUser.id;
-                    myTasksHtml += `
-                    <div class="glass-panel ios-card p-4 border-l-4 border-iosBlue">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold uppercase text-iosBlue mb-1">Aguardando: ${etapaAtual.nome}</p>
-                                <h4 class="font-bold text-base leading-tight">${t.nome}</h4>
-                                <p class="text-gray-500 text-xs mt-1">Prazo: ${formatarData(t.prazo)} ${!isMinha ? `• Resp: ${getUserName(etapaAtual.responsavelId)}` : ''}</p>
-                            </div>
-                            ${isMinha ? `<button onclick="avancarEtapa('${t.id}', '${etapaAtual.id}')" class="w-10 h-10 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-md active:scale-95"><i class="ph-bold ph-check text-xl"></i></button>` : ''}
-                        </div>
-                    </div>`;
-                }
-            });
-
-            myTasksContainer.innerHTML = myTasksHtml || `<p class="text-sm text-gray-400 py-4 text-center">Nenhuma etapa aguardando a sua ação.</p>`;
+            const circle = document.getElementById('progressCircle');
+            const circumference = 40 * 2 * Math.PI; 
+            circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
         }
 
-        function avancarEtapa(tarefaId, etapaId) {
-            const t = appState.tarefas.find(x => x.id === tarefaId);
-            const e = t.etapas.find(x => x.id === etapaId);
-            e.status = 'concluida';
-            
-            // Verifica se tem próxima
-            const nextPendente = t.etapas.find(x => x.status === 'pendente');
-            if(!nextPendente) {
-                t.status = 'concluida';
-                playSound('success');
-                showToast(`Tarefa "${t.nome}" totalmente concluída!`);
-            } else {
-                playSound('notify');
-                showToast(`Etapa finalizada! Passou para: ${getUserName(nextPendente.responsavelId)}`);
-            }
-            renderAll();
-            // TODO: Call API updateTarefa
-        }
-
-        function getUserName(id) {
-            const u = appState.users.find(x => x.id === id);
-            return u ? u.nome.split(' ')[0] : 'Desconhecido';
-        }
-
-        // Tarefas Gerais (Visão Macro)
         function renderTarefas() {
             const list = document.getElementById('tarefasList');
+            // ORDENAÇÃO INTELIGENTE (Datas mais próximas primeiro)
             let pendentes = appState.tarefas.filter(t => t.status !== 'concluida');
+            pendentes.sort((a, b) => new Date(a.prazo) - new Date(b.prazo));
             
-            if(pendentes.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-10"><p>Tudo limpo!</p></div>`; return; }
+            if(pendentes.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-10"><i class="ph-thin ph-check-circle text-6xl mb-2"></i><p>Tudo limpo por aqui!</p></div>`;
+                return;
+            }
+
+            const hoje = new Date(new Date().toDateString());
 
             list.innerHTML = pendentes.map(t => {
-                const etapaAtual = t.etapas.find(e => e.status === 'pendente');
+                // ALERTA DE ATRASO
+                const prazoDate = new Date(t.prazo + 'T00:00:00');
+                const isAtrasado = prazoDate < hoje;
+                const dateStyle = isAtrasado ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300' : 'bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300';
+                
+                // TAG CATEGORIA
                 const catClass = CAT_COLORS[t.categoria] || CAT_COLORS['Geral'];
-                const canEdit = appState.currentUser.role === 'admin' || appState.currentUser.perms.tarefas;
 
                 return `
-                <div class="glass-panel ios-card p-5 relative">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${catClass}">${t.categoria || 'Geral'}</span>
-                    </div>
-                    <h4 class="font-bold text-lg leading-tight mb-1">${t.nome}</h4>
-                    <p class="text-gray-500 text-sm mb-3">${t.descricao}</p>
-                    
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-3 mb-3">
-                        <p class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Fluxo Atual</p>
-                        <div class="space-y-2">
-                            ${t.etapas.map((et, idx) => `
-                                <div class="flex items-center gap-2 text-sm ${et.status==='concluida' ? 'text-gray-400 line-through' : (et === etapaAtual ? 'text-iosBlue font-bold' : 'text-gray-500')}">
-                                    <i class="ph-bold ${et.status==='concluida' ? 'ph-check-circle' : (et === etapaAtual ? 'ph-spinner animate-spin' : 'ph-circle')}"></i>
-                                    ${idx+1}. ${et.nome} (${getUserName(et.responsavelId)})
-                                </div>
-                            `).join('')}
+                <div class="glass-panel ios-card p-5 flex gap-4 items-start relative ${isAtrasado ? 'border-red-500/30' : ''}">
+                    <button onclick="toggleTarefaStatus('${t.id}', 'concluida')" class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 flex-shrink-0 flex items-center justify-center hover:border-iosGreen transition-colors"></button>
+                    <div class="flex-1 pr-8">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${catClass}">${t.categoria || 'Geral'}</span>
+                        </div>
+                        <h4 class="font-bold text-lg leading-tight ${isAtrasado ? 'text-red-500 dark:text-red-400' : ''}">${t.nome}</h4>
+                        <p class="text-gray-500 text-sm mt-1 mb-3">${t.descricao}</p>
+                        <div class="flex items-center gap-3 text-xs font-semibold">
+                            <span class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded-md flex items-center gap-1"><i class="ph-bold ph-user"></i> ${t.responsavel}</span>
+                            <span class="px-2 py-1 rounded-md flex items-center gap-1 ${dateStyle}"><i class="ph-bold ph-calendar"></i> ${formatarData(t.prazo)} ${isAtrasado ? '(Atrasado)' : ''}</span>
                         </div>
                     </div>
-                    
-                    ${canEdit ? `
-                    <button onclick="openEditTarefa('${t.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
+                    <button onclick="openEditTarefa('${t.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors">
                         <i class="ph-bold ph-pencil-simple"></i>
-                    </button>` : ''}
+                    </button>
                 </div>`;
             }).join('');
         }
 
-        // Checklist e Materiais com Permissões
+        function renderConcluidas() {
+            const list = document.getElementById('concluidasList');
+            const search = document.getElementById('searchConcluidas').value.toLowerCase();
+            
+            let concluidas = appState.tarefas.filter(t => t.status === 'concluida');
+            if(search) concluidas = concluidas.filter(t => t.nome.toLowerCase().includes(search) || t.responsavel.toLowerCase().includes(search));
+            
+            if(concluidas.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-10"><p>Nenhuma tarefa encontrada.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = concluidas.map(t => `
+                <div class="glass-panel ios-card p-5 flex gap-4 items-start opacity-70">
+                    <button onclick="toggleTarefaStatus('${t.id}', 'pendente')" class="w-6 h-6 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center">
+                        <i class="ph-bold ph-check text-xs"></i>
+                    </button>
+                    <div class="flex-1 line-through text-gray-500">
+                        <h4 class="font-bold text-lg leading-tight">${t.nome}</h4>
+                        <div class="flex items-center gap-3 text-xs font-semibold mt-2 no-underline">
+                            <span class="px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-800">${t.responsavel}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function renderChecklist() {
             const list = document.getElementById('checklistList');
-            if(appState.checklist.length === 0) return;
-            const canEdit = appState.currentUser.role === 'admin' || appState.currentUser.perms.checklist;
-            
+            if(appState.checklist.length === 0) { list.innerHTML = `<div class="p-6 text-center text-gray-400">Checklist vazio</div>`; return; }
             list.innerHTML = appState.checklist.map(c => `
-                <div class="p-4 flex items-center justify-between group">
-                    <div class="flex items-center gap-4 cursor-pointer flex-1" onclick="${canEdit ? `toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')` : ''}">
-                        <div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center">
+                <div class="p-4 flex items-center justify-between hover:bg-white/40 dark:hover:bg-black/20 transition-colors group">
+                    <div class="flex items-center gap-4 cursor-pointer flex-1" onclick="toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')">
+                        <div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition-colors">
                             ${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
                         </div>
-                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''}">${c.nome}</span>
+                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span>
                     </div>
-                    ${canEdit ? `<button onclick="openEditChecklist('${c.id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}
+                    <div class="flex items-center gap-3">
+                        <span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>
+                        <button onclick="openEditChecklist('${c.id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors"><i class="ph-bold ph-pencil-simple"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // --- SISTEMA DE ETAPAS NA CRIAÇÃO DE TAREFAS ---
-        let tempEtapas = [];
-        
-        function addEtapaToForm() {
-            tempEtapas.push({ id: generateId(), nome: '', responsavelId: appState.users[0].id });
-            renderEtapasForm();
-        }
-
-        function renderEtapasForm() {
-            const container = document.getElementById('t_etapas_container');
-            const userOptions = appState.users.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+        function renderMateriais() {
+            const list = document.getElementById('materiaisList');
+            const search = document.getElementById('searchMateriais').value.toLowerCase();
             
-            container.innerHTML = tempEtapas.map((et, idx) => `
-                <div class="flex gap-2 items-center bg-gray-50 dark:bg-gray-800/50 p-2 rounded-xl">
-                    <div class="w-6 text-center font-bold text-gray-400 text-sm">${idx+1}</div>
-                    <input type="text" placeholder="Ação (Ex: Editar Vídeo)" class="ios-input py-2 px-3 text-sm flex-1" value="${et.nome}" onchange="tempEtapas[${idx}].nome = this.value" required>
-                    <select class="ios-input py-2 px-3 text-sm w-28 appearance-none" onchange="tempEtapas[${idx}].responsavelId = this.value">
-                        ${userOptions.replace(`value="${et.responsavelId}"`, `value="${et.responsavelId}" selected`)}
-                    </select>
-                    <button type="button" onclick="tempEtapas.splice(${idx}, 1); renderEtapasForm()" class="text-red-500 p-2"><i class="ph-bold ph-trash"></i></button>
+            let materiais = appState.materiais;
+            if(search) materiais = materiais.filter(m => m.titulo.toLowerCase().includes(search) || m.descricao.toLowerCase().includes(search));
+
+            if(materiais.length === 0) {
+                list.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Nenhum material encontrado</div>`;
+                return;
+            }
+
+            list.innerHTML = materiais.map(m => `
+                <div class="glass-panel ios-card p-5 relative cursor-pointer" onclick="openGallery('${m.id}')">
+                    <button onclick="event.stopPropagation(); openEditMaterial('${m.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors z-10">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                    </button>
+                    <div class="block hover:scale-[0.98] transition-transform pr-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-4 shadow-md">
+                            <i class="ph-fill ph-images text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg text-gray-900 dark:text-white">${m.titulo}</h4>
+                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao}</p>
+                        <p class="text-iosBlue text-xs font-semibold mt-3 flex items-center gap-1"><i class="ph-bold ph-folder-open"></i> Abrir Galeria</p>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // Rescreve openModal Context based on Perms
+        // --- SISTEMA DE GALERIA E PREVIEW (Mantido Igual) ---
+        async function openGallery(materialId) {
+            const mat = appState.materiais.find(m => m.id === materialId);
+            if(!mat) return;
+            document.getElementById('galleryTitle').innerText = mat.titulo;
+            document.getElementById('modalGallery').classList.add('active');
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i><p class="text-sm">Buscando arquivos...</p></div>`;
+
+            const linkFolder = mat.linkDrive || mat.linkdrive;
+            const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder });
+            
+            if(res.success && res.files && res.files.length > 0) {
+                currentGalleryFiles = res.files; renderGalleryGrid(currentGalleryFiles);
+            } else if (res.success && res.files && res.files.length === 0) {
+                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
+            } else {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><i class="ph-bold ph-warning text-4xl mb-3 text-red-500"></i><p>${res.error}</p></div>`;
+            }
+        }
+
+        function renderGalleryGrid(files) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = files.map((file, index) => {
+                const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+                const icon = isVideo ? 'ph-video-camera' : 'ph-image';
+                const bgColors = isVideo ? 'from-gray-700 to-gray-900' : 'from-iosBlue to-blue-800';
+                const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                const thumbUrl = (file.url.includes('drive.google.com') && file.id) ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w500` : directUrl;
+                const bgStyle = file.id ? `background-image: url('${thumbUrl}'); background-size: cover; background-position: center;` : '';
+
+                return `
+                <div onclick="openPreview(${index})" class="aspect-square rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer" style="${bgStyle}">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                    ${!bgStyle ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-white/50"><i class="ph-fill ${icon} text-4xl mb-2"></i></div>` : ''}
+                    ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
+                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent"><p class="text-white text-[11px] font-semibold truncate">${file.name}</p></div>
+                </div>`;
+            }).join('');
+        }
+
+        function closeGallery() { document.getElementById('modalGallery').classList.remove('active'); currentGalleryFiles = []; }
+
+        function openPreview(fileIndex) {
+            const file = currentGalleryFiles[fileIndex];
+            if(!file) return;
+            const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+            const container = document.getElementById('previewMediaContainer');
+            container.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-4xl text-white"></i>`;
+            
+            document.getElementById('modalPreview').classList.add('active');
+            document.getElementById('previewFilename').innerText = file.name;
+            document.getElementById('previewType').innerText = isVideo ? 'Vídeo' : 'Imagem';
+            document.getElementById('btnDownloadPreview').href = file.downloadUrl || (file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=download&id=${file.id}` : file.url); 
+            document.getElementById('btnDownloadPreview').download = file.name;
+
+            setTimeout(() => {
+                if (isVideo) {
+                    if (file.url.includes('drive.google.com') && file.id) { container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`; } 
+                    else { container.innerHTML = `<video src="${file.url}" controls autoplay playsinline class="w-full max-h-full object-contain"></video>`; }
+                } else {
+                    const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                    container.innerHTML = `<img src="${directUrl}" alt="${file.name}" class="w-full max-h-full object-contain">`;
+                }
+            }, 300);
+        }
+
+        function closePreview() {
+            document.getElementById('modalPreview').classList.remove('active');
+            setTimeout(() => { document.getElementById('previewMediaContainer').innerHTML = ''; }, 300);
+        }
+
+        // --- INTERAÇÕES E MODAIS ---
         function openContextModal() {
             const tab = appState.currentTab;
-            const p = appState.currentUser.perms;
-            const isAdmin = appState.currentUser.role === 'admin';
-            
-            if((tab === 'inicio' || tab === 'tarefas') && (isAdmin || p.tarefas)) {
-                tempEtapas = [{id: generateId(), nome: 'Etapa Única', responsavelId: appState.currentUser.id}];
-                renderEtapasForm();
-                openModal('modalTarefa');
-            } else if(tab === 'checklist' && (isAdmin || p.checklist)) openModal('modalChecklist');
-            else if(tab === 'materiais' && (isAdmin || p.materiais)) openModal('modalMaterial');
-            else showToast("Você não tem permissão para criar itens aqui.");
+            if(tab === 'inicio' || tab === 'tarefas') openModal('modalTarefa');
+            else if(tab === 'checklist') openModal('modalChecklist');
+            else if(tab === 'materiais') openModal('modalMaterial');
         }
 
-        // --- GESTÃO DE EQUIPA (ADMIN) ---
-        function openAdminTeam() {
-            document.getElementById('modalAdminTeam').classList.add('active');
-            const list = document.getElementById('adminUserList');
-            list.innerHTML = appState.users.map(u => `
-                <div class="glass-panel ios-card p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <img src="${u.foto || `https://ui-avatars.com/api/?name=${u.nome}`}" class="w-10 h-10 rounded-full object-cover">
-                        <div>
-                            <p class="font-bold text-[15px]">${u.nome} ${u.role==='admin' ? '<span class="text-blue-500 text-[10px] ml-1 border border-blue-500 px-1 rounded">ADMIN</span>' : ''}</p>
-                            <p class="text-xs text-gray-500">${u.email}</p>
-                        </div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-gray-400"></i>
-                </div>
-            `).join('');
-        }
-        function closeAdminTeam() { document.getElementById('modalAdminTeam').classList.remove('active'); }
-        function openModalAddUser() { openModal('modalAddUser'); }
-        function closeModalAddUser() { closeModal('modalAddUser'); }
-
-        function submitNewUser(e) {
-            e.preventDefault();
-            const newUser = {
-                id: 'u_' + Date.now(),
-                nome: document.getElementById('u_nome').value,
-                email: document.getElementById('u_email').value,
-                pass: document.getElementById('u_senha').value,
-                foto: document.getElementById('u_foto').value,
-                role: 'user',
-                perms: {
-                    tarefas: document.getElementById('p_tarefas').checked,
-                    checklist: document.getElementById('p_checklist').checked,
-                    materiais: document.getElementById('p_materiais').checked
-                }
-            };
-            appState.users.push(newUser);
-            showToast(`Utilizador ${newUser.nome} cadastrado! E-mail de boas-vindas simualdo enviado.`);
-            closeModalAddUser();
-            openAdminTeam();
-        }
-
-        // Funções de formatação mantidas minimizadas
-        function switchTab(t) { /* Mantido via sobrescrita padrão no body do request do JS original */ appState.currentTab = t; document.querySelectorAll('.view-section').forEach(e => e.classList.add('hidden')); document.getElementById('view-'+t).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e => { e.classList.remove('active','text-iosBlue'); e.classList.add('text-gray-400'); if(e.dataset.tab===t){e.classList.add('active','text-iosBlue'); e.classList.remove('text-gray-400');} }); const b=document.getElementById('mainAddBtn'); if(b){ const p=appState.currentUser.perms; const admin=appState.currentUser.role==='admin'; let can=false; if(t==='inicio'||t==='tarefas')can=admin||p.tarefas; if(t==='checklist')can=admin||p.checklist; if(t==='materiais')can=admin||p.materiais; if(can && t!=='concluidas' && t!=='config'){ b.style.display='flex'; }else{ b.style.display='none'; } } renderAll(); }
         function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function generateId() { return 'id_' + Math.random().toString(36).substr(2, 9); }
-        function formatarData(d) { if(!d)return''; let x=String(d); if(x.indexOf('T')===-1)x+='T00:00:00'; return new Date(x).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.',''); }
-        // Outras funcoes mockadas para evitar erro
-        function renderConcluidas(){} function renderMateriais(){} function submitTarefa(e){e.preventDefault(); closeModal('modalTarefa'); showToast("Simulação: Tarefa de fluxo criada!"); renderAll();} function toggleChecklistStatus(id,s){}
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            const formMap = { 'modalTarefa': 'formTarefa', 'modalChecklist': 'formChecklist', 'modalMaterial': 'formMaterial' };
+            document.getElementById(formMap[id]).reset();
+            editingItemId = null;
+            
+            // Esconde botões de deletar
+            document.getElementById('btnDelTarefa').classList.add('hidden');
+            document.getElementById('btnDelChecklist').classList.add('hidden');
+            document.getElementById('btnDelMaterial').classList.add('hidden');
+
+            if(id === 'modalTarefa') {
+                document.getElementById('modalTarefaTitle').innerText = 'Nova Tarefa';
+                document.getElementById('t_btn_text').innerText = 'Salvar Tarefa';
+            } else if(id === 'modalChecklist') {
+                document.getElementById('modalChecklistTitle').innerText = 'Adicionar ao Checklist';
+                document.getElementById('c_btn_text').innerText = 'Adicionar';
+            } else if(id === 'modalMaterial') {
+                document.getElementById('modalMaterialTitle').innerText = 'Vincular Material';
+                document.getElementById('m_btn_text').innerText = 'Salvar Vínculo';
+            }
+        }
+
+        function openEditTarefa(id) {
+            const item = appState.tarefas.find(t => t.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalTarefaTitle').innerText = 'Editar Tarefa';
+            document.getElementById('t_nome').value = item.nome;
+            document.getElementById('t_desc').value = item.descricao;
+            document.getElementById('t_resp').value = item.responsavel;
+            document.getElementById('t_cat').value = item.categoria || 'Geral';
+            document.getElementById('t_prazo').value = item.prazo ? String(item.prazo).split('T')[0] : '';
+            document.getElementById('t_btn_text').innerText = 'Salvar Alterações';
+            document.getElementById('btnDelTarefa').classList.remove('hidden');
+            openModal('modalTarefa');
+        }
+
+        function openEditChecklist(id) {
+            const item = appState.checklist.find(c => c.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalChecklistTitle').innerText = 'Editar Item';
+            document.getElementById('c_nome').value = item.nome;
+            document.getElementById('c_qtd').value = item.quantidade;
+            document.getElementById('c_btn_text').innerText = 'Salvar Alterações';
+            document.getElementById('btnDelChecklist').classList.remove('hidden');
+            openModal('modalChecklist');
+        }
+
+        function openEditMaterial(id) {
+            const item = appState.materiais.find(m => m.id === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalMaterialTitle').innerText = 'Editar Material';
+            document.getElementById('m_titulo').value = item.titulo;
+            document.getElementById('m_desc').value = item.descricao;
+            document.getElementById('m_link').value = item.linkDrive || item.linkdrive || '';
+            document.getElementById('m_btn_text').innerText = 'Salvar Alterações';
+            document.getElementById('btnDelMaterial').classList.remove('hidden');
+            openModal('modalMaterial');
+        }
+
+        // --- SISTEMA DE EXCLUSÃO ---
+        async function confirmDelete(type) {
+            if(!confirm(`Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.`)) return;
+            
+            const id = editingItemId;
+            let modalId = type === 'Tarefas' ? 'modalTarefa' : (type === 'Checklist' ? 'modalChecklist' : 'modalMaterial');
+            
+            // Otimista
+            if(type === 'Tarefas') appState.tarefas = appState.tarefas.filter(t => t.id !== id);
+            if(type === 'Checklist') appState.checklist = appState.checklist.filter(t => t.id !== id);
+            if(type === 'Materiais') appState.materiais = appState.materiais.filter(t => t.id !== id);
+            
+            closeModal(modalId);
+            renderAll();
+            
+            await apiRequest({ action: 'deleteItem', type: type, id: id });
+        }
+
+
+        // --- COMUNICAÇÃO COM API ---
+        async function apiRequest(payload) {
+            if(!WEB_APP_URL) return new Promise(resolve => setTimeout(() => resolve({success: true, id: 'id_' + Date.now()}), 500));
+            try {
+                const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+                return await response.json();
+            } catch (error) { return { success: false, error }; }
+        }
+
+        async function fetchData() {
+            if(!WEB_APP_URL) return; 
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getAll`);
+                const data = await response.json();
+                if(data.tarefas) { appState = { ...appState, ...data }; renderAll(); }
+            } catch (error) { console.error("Erro ao carregar dados:", error); }
+        }
+
+        function setBtnLoading(btnPrefix, isLoading) {
+            const text = document.getElementById(`${btnPrefix}_text`);
+            const spin = document.getElementById(`${btnPrefix}_spin`);
+            if(isLoading) { text.classList.add('hidden'); spin.classList.remove('hidden'); } 
+            else { text.classList.remove('hidden'); spin.classList.add('hidden'); }
+        }
+
+        async function submitTarefa(e) {
+            e.preventDefault(); setBtnLoading('t_btn', true);
+            const tarefaData = {
+                nome: document.getElementById('t_nome').value,
+                descricao: document.getElementById('t_desc').value,
+                responsavel: document.getElementById('t_resp').value,
+                categoria: document.getElementById('t_cat').value,
+                prazo: document.getElementById('t_prazo').value
+            };
+            if (editingItemId) {
+                tarefaData.id = editingItemId;
+                const res = await apiRequest({ action: 'editTarefa', data: tarefaData });
+                if(res.success) {
+                    const idx = appState.tarefas.findIndex(t => t.id === editingItemId);
+                    appState.tarefas[idx] = { ...appState.tarefas[idx], ...tarefaData };
+                    closeModal('modalTarefa'); renderAll();
+                }
+            } else {
+                tarefaData.status = 'pendente';
+                const res = await apiRequest({ action: 'addTarefa', data: tarefaData });
+                if(res.success) {
+                    tarefaData.id = res.id; appState.tarefas.push(tarefaData);
+                    closeModal('modalTarefa'); renderAll();
+                }
+            }
+            setBtnLoading('t_btn', false);
+        }
+
+        async function submitChecklist(e) {
+            e.preventDefault(); setBtnLoading('c_btn', true);
+            const itemData = { nome: document.getElementById('c_nome').value, quantidade: document.getElementById('c_qtd').value };
+            if (editingItemId) {
+                itemData.id = editingItemId;
+                const res = await apiRequest({ action: 'editChecklist', data: itemData });
+                if(res.success) {
+                    const idx = appState.checklist.findIndex(c => c.id === editingItemId);
+                    appState.checklist[idx] = { ...appState.checklist[idx], ...itemData };
+                    closeModal('modalChecklist'); renderAll();
+                }
+            } else {
+                itemData.status = 'pendente';
+                const res = await apiRequest({ action: 'addChecklist', data: itemData });
+                if(res.success) {
+                    itemData.id = res.id; appState.checklist.push(itemData);
+                    closeModal('modalChecklist'); renderAll();
+                }
+            }
+            setBtnLoading('c_btn', false);
+        }
+
+        async function submitMaterial(e) {
+            e.preventDefault(); setBtnLoading('m_btn', true);
+            const matData = { titulo: document.getElementById('m_titulo').value, descricao: document.getElementById('m_desc').value, linkDrive: document.getElementById('m_link').value };
+            if (editingItemId) {
+                matData.id = editingItemId;
+                const res = await apiRequest({ action: 'editMaterial', data: matData });
+                if(res.success) {
+                    const idx = appState.materiais.findIndex(m => m.id === editingItemId);
+                    appState.materiais[idx] = { ...appState.materiais[idx], ...matData };
+                    closeModal('modalMaterial'); renderAll();
+                }
+            } else {
+                const res = await apiRequest({ action: 'addMaterial', data: matData });
+                if(res.success) {
+                    matData.id = res.id; appState.materiais.push(matData);
+                    closeModal('modalMaterial'); renderAll();
+                }
+            }
+            setBtnLoading('m_btn', false);
+        }
+
+        async function toggleTarefaStatus(id, newStatus) {
+            const index = appState.tarefas.findIndex(t => t.id === id);
+            if(index > -1) {
+                appState.tarefas[index].status = newStatus; renderAll();
+                await apiRequest({ action: 'updateTarefaStatus', data: { id, status: newStatus } });
+            }
+        }
+
+        async function toggleChecklistStatus(id, newStatus) {
+            const index = appState.checklist.findIndex(c => c.id === id);
+            if(index > -1) {
+                appState.checklist[index].status = newStatus; renderChecklist(); 
+                await apiRequest({ action: 'updateChecklistStatus', data: { id, status: newStatus } });
+            }
+        }
+
+        function formatarData(dataString) {
+            if(!dataString) return '';
+            let d = String(dataString);
+            if(d.indexOf('T') === -1) d += 'T00:00:00'; 
+            const data = new Date(d);
+            if (isNaN(data.getTime())) return 'Data Inválida';
+            return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+        }
 
     </script>
 </body>
