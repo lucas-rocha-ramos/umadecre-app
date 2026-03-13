@@ -241,7 +241,9 @@
             <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais"><i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span></button>
             <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="config"><i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span></button>
         </nav>
-    </div> <div id="modalPerfil" class="modal-overlay fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+    </div>
+
+    <div id="modalPerfil" class="modal-overlay fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex flex-col items-center mb-6">
@@ -276,7 +278,7 @@
             <div class="flex justify-between items-center mb-6 shrink-0">
                 <button onclick="closeModal('modalAdminUsuarios'); openModal('modalPerfil')" class="text-iosBlue"><i class="ph-bold ph-caret-left text-2xl"></i></button>
                 <h2 class="text-xl font-bold">Usuários</h2>
-                <button onclick="abrirNovoUsuario()" class="w-8 h-8 rounded-full bg-iosBlue/10 text-iosBlue flex items-center justify-center"><i class="ph-bold ph-plus"></i></button>
+                <button onclick="openFormUsuario()" class="w-8 h-8 rounded-full bg-iosBlue/10 text-iosBlue flex items-center justify-center"><i class="ph-bold ph-plus"></i></button>
             </div>
             <div id="listaUsuariosAdmin" class="flex-1 overflow-y-auto hide-scrollbar space-y-3"></div>
         </div>
@@ -316,7 +318,7 @@
     <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col"><div class="pt-safe-top w-full z-10 shrink-0"><div class="flex items-center justify-between px-4 py-3"><button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white"><i class="ph-bold ph-x text-xl"></i></button><a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2 shadow-lg"><i class="ph-bold ph-download-simple"></i> Baixar</a></div></div><div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative"></div><div class="w-full p-6 pb-safe-bottom shrink-0"><h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome</h3><p id="previewType" class="text-gray-400 text-sm">Tipo</p></div></div>
 
     <script>
-        // COLOQUE O SEU LINK DO APPS SCRIPT AQUI (Lembre-se de fazer um NOVO DEPLOY!)
+        // COLOQUE O SEU LINK DO APPS SCRIPT AQUI APÓS O NOVO DEPLOY
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxStlNozLTkpHekE4D_1cjy7IYkt6cyYoJas42qA3EOJUGot-TiXx9pYWRW6_EZgpDF/exec"; 
 
         let appState = { currentTab: 'inicio', tarefas: [], checklist: [], materiais: [], usuarios: [] };
@@ -409,7 +411,6 @@
             const btn = document.getElementById('mainAddBtn');
             if(btn) {
                 btn.style.transform = 'scale(0.8)'; setTimeout(() => btn.style.transform = 'scale(1)', 150);
-                // OCULTA BOTÃO DE ADICIONAR SE NÃO FOR ADMIN (OU SE ESTIVER NA ABA CONFIG)
                 if(!isAdmin() || tabName === 'config' || tabName === 'concluidas') btn.classList.add('hidden');
                 else btn.classList.remove('hidden');
             }
@@ -433,7 +434,6 @@
                 const isAtrasado = new Date(t.prazo + 'T00:00:00') < hoje;
                 const catClass = CAT_COLORS[t.categoria] || CAT_COLORS['Geral'];
                 
-                // PERMISSÕES: Comum só clica no check se a tarefa for dele. Admin edita e clica em tudo.
                 const isMinha = currentUser && t.responsavel.toLowerCase() === currentUser.nome.toLowerCase();
                 const podeConcluir = isAdmin() || isMinha;
                 const htmlCheck = podeConcluir ? `<button onclick="toggleTarefaStatus('${t.id}', 'concluida')" class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 flex-shrink-0 flex items-center justify-center hover:border-iosGreen transition-colors"></button>` : `<div class="w-6 h-6 rounded-full border-2 border-gray-300/50 dark:border-gray-700 mt-1 flex-shrink-0"></div>`;
@@ -477,16 +477,13 @@
                 document.getElementById('btnAdminUsuarios').classList.add('hidden');
             }
 
-            // Exibir tarefas do usuário
             const minhas = appState.tarefas.filter(t => t.responsavel.toLowerCase() === currentUser.nome.toLowerCase() && t.status !== 'concluida');
             const list = document.getElementById('perfilTarefas');
             if(minhas.length === 0) list.innerHTML = `<p class="text-gray-400 text-sm text-center">Nenhuma tarefa pendente para você.</p>`;
             else list.innerHTML = minhas.map(t => `<div class="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm font-medium"><i class="ph-fill ph-clock text-orange-500"></i> ${t.nome}</div>`).join('');
         }
 
-        function editarMeuPerfil() {
-            openFormUsuario(currentUser.id);
-        }
+        function editarMeuPerfil() { openFormUsuario(currentUser.id); }
 
         function abrirAdminUsuarios() {
             closeModal('modalPerfil');
@@ -550,13 +547,16 @@
                 senha: document.getElementById('u_senha').value
             };
 
-            if (base64FotoTemp) {
-                userData.fotoBase64 = base64FotoTemp;
-                userData.fotoMimeType = mimeFotoTemp;
-            } else if (editandoUsuarioId) {
+            // AQUI ESTAVA O BUG CORRIGIDO! Sempre anexa a foto atual na edição para não sumir.
+            if (editandoUsuarioId) {
                 const existing = appState.usuarios.find(x => x.id === editandoUsuarioId);
                 userData.fotoAtual = existing ? existing.foto : '';
             }
+
+            if (base64FotoTemp) {
+                userData.fotoBase64 = base64FotoTemp;
+                userData.fotoMimeType = mimeFotoTemp;
+            } 
 
             if(editandoUsuarioId) userData.id = editandoUsuarioId;
 
@@ -564,6 +564,7 @@
             await fetchData();
             setLoading('u_btn', false);
             closeModal('modalFormUsuario');
+            
             if(document.getElementById('modalAdminUsuarios').classList.contains('active')) abrirAdminUsuarios();
             if(editandoUsuarioId === currentUser.id) carregarMeuPerfil();
         }
@@ -586,7 +587,6 @@
                 if(data.tarefas) { 
                     appState = data;
                     
-                    // Atualiza sessão caso o admin tenha mudado foto ou dados
                     const me = appState.usuarios.find(u => u.id === currentUser.id);
                     if(me) { currentUser = me; localStorage.setItem('umadecre_user_auth', JSON.stringify(me)); document.getElementById('btnProfilePic').src = me.foto || `https://ui-avatars.com/api/?name=${me.nome}`; }
                     
@@ -595,7 +595,6 @@
             } catch (error) { console.error("Erro:", error); }
         }
 
-        // Funções Originais Mantidas
         function openContextModal() {
             if(!isAdmin()) return;
             const tab = appState.currentTab;
@@ -618,7 +617,6 @@
         async function toggleTarefaStatus(id, newStatus) { const idx = appState.tarefas.findIndex(t => t.id === id); if(idx > -1) { appState.tarefas[idx].status = newStatus; renderAll(); await apiRequest({ action: 'updateTarefaStatus', data: { id, status: newStatus } }); } }
         async function toggleChecklistStatus(id, newStatus) { const idx = appState.checklist.findIndex(c => c.id === id); if(idx > -1) { appState.checklist[idx].status = newStatus; renderChecklist(); await apiRequest({ action: 'updateChecklistStatus', data: { id, status: newStatus } }); } }
 
-        // MÉTODOS DE RENDERIZAÇÃO SECUNDÁRIOS MANTIDOS: Dashboard, Concluídas, Checklist, Materiais, Galeria e Formatações
         function renderDashboard() { const total = appState.tarefas.length; const concluidas = appState.tarefas.filter(t => t.status === 'concluida').length; const pct = total === 0 ? 0 : Math.round((concluidas/total)*100); document.getElementById('dashPercent').innerText = `${pct}%`; document.getElementById('dashCompleted').innerText = concluidas; document.getElementById('dashTotal').innerText = total; document.getElementById('dashPendenteCount').innerText = total - concluidas; document.getElementById('dashConcluidaCount').innerText = concluidas; const circle = document.getElementById('progressCircle'); circle.style.strokeDashoffset = 251.2 - (pct/100)*251.2; }
         function renderConcluidas() { const list = document.getElementById('concluidasList'); const search = document.getElementById('searchConcluidas').value.toLowerCase(); let concluidas = appState.tarefas.filter(t => t.status === 'concluida'); if(search) concluidas = concluidas.filter(t => t.nome.toLowerCase().includes(search) || t.responsavel.toLowerCase().includes(search)); if(concluidas.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-10"><p>Nenhuma tarefa encontrada.</p></div>`; return; } list.innerHTML = concluidas.map(t => { const isMinha = currentUser && t.responsavel.toLowerCase() === currentUser.nome.toLowerCase(); const canRev = isAdmin() || isMinha; const btn = canRev ? `<button onclick="toggleTarefaStatus('${t.id}', 'pendente')" class="w-6 h-6 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-xs"></i></button>` : `<div class="w-6 h-6 rounded-full bg-gray-400 text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-xs"></i></div>`; return `<div class="glass-panel ios-card p-5 flex gap-4 items-start opacity-70">${btn}<div class="flex-1 line-through text-gray-500"><h4 class="font-bold text-lg leading-tight">${t.nome}</h4><div class="flex items-center gap-3 text-xs font-semibold mt-2 no-underline"><span class="px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-800">${t.responsavel}</span></div></div></div>`; }).join(''); }
         function renderChecklist() { const list = document.getElementById('checklistList'); if(appState.checklist.length === 0) { list.innerHTML = `<div class="p-6 text-center text-gray-400">Checklist vazio</div>`; return; } list.innerHTML = appState.checklist.map(c => { const cEdit = isAdmin(); const click = cEdit ? `onclick="toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')"` : ''; const btn = cEdit ? `<button onclick="openEditChecklist('${c.id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors"><i class="ph-bold ph-pencil-simple"></i></button>` : ''; return `<div class="p-4 flex items-center justify-between hover:bg-white/40 dark:hover:bg-black/20 transition-colors group"><div class="flex items-center gap-4 ${cEdit?'cursor-pointer':''} flex-1" ${click}><div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition-colors">${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}</div><span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span></div><div class="flex items-center gap-3"><span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>${btn}</div></div>`; }).join(''); }
