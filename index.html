@@ -1528,16 +1528,4 @@
     </script>
 </body>
 </html>
-```
 
-### 2. Adição no `code.gs` (Apps Script)
-
-Para que a função de **Editar Tarefas** que lhe adicionei no frontend funcione corretamente e grave os dados alterados na folha, adicione este bloco dentro da sua função `doPost(e)` (logo abaixo da parte que tem `if(action === "addTarefaFluxo") { ... }`):
-
-```javascript
-    if(action === "editTarefaFluxo") {
-      var sheet = ss.getSheetByName("TarefasFluxo");
-      var fluxoJson = JSON.stringify(data.fluxo);
-      var updated = updateRowById(sheet, data.id, { titulo: data.titulo, descricao: data.descricao, fluxo: fluxoJson });
-      return formatResponse({ success: updated });
-    }
