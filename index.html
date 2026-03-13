@@ -111,7 +111,7 @@
 <body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
 
     <!-- ÁUDIO DE ALERTA -->
-    <audio id="audioAlertaAviso" loop src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+    <audio id="audioAlertaAviso" loop src="https://assets.mixkit.co/sfx/preview/mixkit-emergency-alert-alarm-1007.mp3" preload="auto"></audio>
 
     <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
@@ -728,7 +728,7 @@
             renderChecklist(); 
             renderMateriais();
             renderEquipe();
-            verificarAvisosAlerta(); // Dispara popup de aviso se houver
+            verificarAvisosAlerta(); 
         }
 
         function renderDashboard() {
@@ -831,7 +831,7 @@
         function verificarAvisosAlerta() {
             if(!currentUser || !appState.avisos) return;
             const modal = document.getElementById('modalShowAviso');
-            if(modal.classList.contains('active')) return; // Já tem um na tela
+            if(modal.classList.contains('active')) return; 
             
             const meusAvisos = appState.avisos.filter(a => {
                 let alvo = a.Alvo || a.alvo;
@@ -861,7 +861,6 @@
             
             const audio = document.getElementById('audioAlertaAviso');
             audio.currentTime = 0;
-            // O Play pode falhar se o usuário não interagiu com a tela, mas num PWA ou clique prévio, funciona perfeitamente
             audio.play().catch(e => console.log("Áudio aguardando interação do usuário."));
         }
 
