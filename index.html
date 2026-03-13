@@ -114,7 +114,7 @@
         <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
     </div>
 
-    <div id="loginScreen" class="fixed inset-0 z-[90] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center p-6 hidden">
+    <div id="loginScreen" class="fixed inset-0 z-[90] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center p-6">
         <div class="w-full max-w-sm">
             <div class="flex justify-center mb-8">
                 <div class="w-32 h-32 rounded-full glass-panel flex items-center justify-center shadow-lg">
@@ -248,10 +248,9 @@
             <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
                 <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
                 <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                <p class="text-[10px]">Versão 1.2 • Atualizado</p>
+                <p class="text-[10px]">Versão 2.0 • Atualizado</p>
             </div>
         </div>
-
     </main>
 
     <nav id="bottomNav" class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-between items-center hidden">
@@ -290,8 +289,7 @@
 
             <div class="space-y-4 mb-6">
                 <h3 class="font-bold text-lg mb-2">Suas Tarefas</h3>
-                <div id="perfilTarefasList" class="space-y-3">
-                    </div>
+                <div id="perfilTarefasList" class="space-y-3"></div>
             </div>
 
             <div class="space-y-3">
@@ -314,9 +312,7 @@
                 <h2 class="text-xl font-bold">Usuários</h2>
                 <button onclick="openModalUsuario()" class="w-8 h-8 rounded-full bg-iosBlue/10 text-iosBlue flex items-center justify-center"><i class="ph-bold ph-plus"></i></button>
             </div>
-            
-            <div id="usuariosList" class="flex-1 overflow-y-auto hide-scrollbar space-y-3">
-                </div>
+            <div id="usuariosList" class="flex-1 overflow-y-auto hide-scrollbar space-y-3"></div>
         </div>
     </div>
 
@@ -361,6 +357,7 @@
     <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col"><div class="pt-safe-top w-full z-10 shrink-0"><div class="flex items-center justify-between px-4 py-3"><button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white"><i class="ph-bold ph-x text-xl"></i></button><a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2 shadow-lg"><i class="ph-bold ph-download-simple"></i> Baixar</a></div></div><div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative"></div><div class="w-full p-6 pb-safe-bottom shrink-0"><h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome</h3><p id="previewType" class="text-gray-400 text-sm">Tipo</p></div></div>
 
     <script>
+        // ATENÇÃO LUCAS: COLOQUE AQUI A NOVA URL DO SEU APPS SCRIPT APÓS FAZER O NOVO DEPLOY!
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxStlNozLTkpHekE4D_1cjy7IYkt6cyYoJas42qA3EOJUGot-TiXx9pYWRW6_EZgpDF/exec"; 
 
         let appState = { currentUser: null, currentTab: 'inicio', tarefas: [], checklist: [], materiais: [], usuarios: [] };
@@ -372,15 +369,23 @@
 
         const CAT_COLORS = { 'Geral': 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300', 'Câmera': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', 'Fotografia': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', 'Projeção': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', 'Edição': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
 
-        // --- INICIALIZAÇÃO E AUTENTICAÇÃO ---
         window.onload = async () => {
             atualizarIconeTema();
-            const savedUser = localStorage.getItem('umadecre_user');
-            
-            if (savedUser) {
-                appState.currentUser = JSON.parse(savedUser);
-                loadAppInterface();
-            } else {
+            try {
+                // Chave atualizada para quebrar o cache antigo
+                const savedUser = localStorage.getItem('umadecre_auth_v2'); 
+                if (savedUser) {
+                    const parsed = JSON.parse(savedUser);
+                    if(parsed && parsed.email && parsed.role) {
+                        appState.currentUser = parsed;
+                        loadAppInterface();
+                    } else {
+                        showLoginScreen();
+                    }
+                } else {
+                    showLoginScreen();
+                }
+            } catch(e) {
                 showLoginScreen();
             }
             
@@ -409,13 +414,11 @@
             errEl.classList.add('hidden');
             
             const res = await apiRequest({ action: 'login', data: { email, senha } });
-            
             setBtnLoading('loginBtn', false);
             
             if (res.success) {
                 appState.currentUser = res.user;
-                localStorage.setItem('umadecre_user', JSON.stringify(res.user));
-                document.getElementById('loginScreen').classList.add('hidden');
+                localStorage.setItem('umadecre_auth_v2', JSON.stringify(res.user));
                 loadAppInterface();
             } else {
                 errEl.innerText = res.error || "Erro ao fazer login.";
@@ -424,18 +427,20 @@
         }
 
         function logout() {
-            localStorage.removeItem('umadecre_user');
+            localStorage.removeItem('umadecre_auth_v2');
             appState.currentUser = null;
             closeModal('modalPerfil');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
             showLoginScreen();
         }
 
         async function loadAppInterface() {
+            document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('bottomNav').classList.remove('hidden');
             document.getElementById('topHeader').classList.remove('hidden');
             
-            // Atualiza foto do topo
             if(appState.currentUser.foto) document.getElementById('headerProfilePic').src = appState.currentUser.foto;
             
             switchTab('inicio');
@@ -449,17 +454,14 @@
         // --- SISTEMA DE TEMA E SYNC ---
         function toggleTheme() {
             if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
+                document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light');
             } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
+                document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark');
             }
             atualizarIconeTema();
         }
         function atualizarIconeTema() {
-            const icon = document.getElementById('themeIcon');
-            const checkbox = document.getElementById('themeToggleCheckbox');
+            const icon = document.getElementById('themeIcon'); const checkbox = document.getElementById('themeToggleCheckbox');
             const isDark = document.documentElement.classList.contains('dark');
             if(isDark) { if(icon) icon.classList.replace('ph-moon', 'ph-sun'); if(checkbox) checkbox.checked = true; } 
             else { if(icon) icon.classList.replace('ph-sun', 'ph-moon'); if(checkbox) checkbox.checked = false; }
@@ -479,8 +481,7 @@
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('active', 'text-iosBlue');
-                el.classList.add('text-gray-400');
+                el.classList.remove('active', 'text-iosBlue'); el.classList.add('text-gray-400');
                 if(el.dataset.tab === tabName) { el.classList.add('active', 'text-iosBlue'); el.classList.remove('text-gray-400'); }
             });
 
@@ -488,7 +489,6 @@
             if(btn) {
                 btn.style.transform = 'scale(0.8)';
                 setTimeout(() => btn.style.transform = 'scale(1)', 150);
-                // FAB só aparece para Admin nas abas permitidas
                 if(isAdmin() && (tabName === 'inicio' || tabName === 'tarefas' || tabName === 'checklist' || tabName === 'materiais')) { 
                     btn.classList.remove('hidden'); 
                 } else { 
@@ -533,7 +533,6 @@
                 const isAtrasado = new Date(t.prazo + 'T00:00:00') < hoje;
                 const catClass = CAT_COLORS[t.categoria] || CAT_COLORS['Geral'];
                 
-                // Regras de Permissão
                 const isMyTask = appState.currentUser && t.responsavel.toLowerCase().trim() === appState.currentUser.nome.toLowerCase().trim();
                 const canComplete = isAdmin() || isMyTask;
                 const btnCheckHTML = canComplete ? `<button onclick="toggleTarefaStatus('${t.id}', 'concluida')" class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 flex-shrink-0 flex items-center justify-center hover:border-iosGreen transition-colors"></button>` : `<div class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-700 mt-1 flex-shrink-0 opacity-50"></div>`;
@@ -644,15 +643,14 @@
                 document.getElementById('btnGerenciarUsuarios').classList.add('hidden');
             }
 
-            // Minhas Tarefas
             const minhas = appState.tarefas.filter(t => t.responsavel.toLowerCase().trim() === u.nome.toLowerCase().trim() && t.status !== 'concluida');
             const list = document.getElementById('perfilTarefasList');
-            if(minhas.length === 0) list.innerHTML = `<p class="text-gray-400 text-sm">Nenhuma tarefa pendente para você.</p>`;
+            if(minhas.length === 0) list.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">Nenhuma tarefa pendente para você.</p>`;
             else {
                 list.innerHTML = minhas.map(t => `<div class="px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm font-medium flex gap-2 items-center"><i class="ph-fill ph-clock text-orange-500"></i> ${t.nome}</div>`).join('');
             }
 
-            openModal('modalPerfil');
+            document.getElementById('modalPerfil').classList.add('active');
         }
 
         function openGerenciarUsuarios() {
@@ -768,11 +766,10 @@
                     appState.materiais = data.materiais; 
                     if(data.usuarios) appState.usuarios = data.usuarios;
                     
-                    // Atualiza perfil caso tenha sido editado
                     const me = appState.usuarios.find(u => u.id === appState.currentUser.id);
                     if(me) {
                         appState.currentUser = me;
-                        localStorage.setItem('umadecre_user', JSON.stringify(me));
+                        localStorage.setItem('umadecre_auth_v2', JSON.stringify(me));
                         document.getElementById('headerProfilePic').src = me.foto || `https://ui-avatars.com/api/?name=${me.nome}`;
                     }
 
@@ -781,7 +778,6 @@
             } catch (error) { console.error("Erro ao carregar dados:", error); }
         }
 
-        // Modais Gerais
         function openContextModal() {
             if(!isAdmin()) return;
             const tab = appState.currentTab;
@@ -791,28 +787,23 @@
         }
 
         function openModal(id) { 
-            if(id === 'modalPerfil') openPerfil(); // Intercepta para carregar dados
+            if(id === 'modalPerfil') openPerfil(); 
             else document.getElementById(id).classList.add('active'); 
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
             const formMap = { 'modalTarefa': 'formTarefa', 'modalChecklist': 'formChecklist', 'modalMaterial': 'formMaterial' };
-            if(formMap[id]) {
-                document.getElementById(formMap[id]).reset();
-                editingItemId = null;
-            }
+            if(formMap[id]) { document.getElementById(formMap[id]).reset(); editingItemId = null; }
         }
 
         function setBtnLoading(btnPrefix, isLoading) {
-            const text = document.getElementById(`${btnPrefix}_text`);
-            const spin = document.getElementById(`${btnPrefix}_spin`);
+            const text = document.getElementById(`${btnPrefix}_text`); const spin = document.getElementById(`${btnPrefix}_spin`);
             if(!text || !spin) return;
             if(isLoading) { text.classList.add('hidden'); spin.classList.remove('hidden'); } 
             else { text.classList.remove('hidden'); spin.classList.add('hidden'); }
         }
 
-        // Submits (Mantidos iguais, simplificados apenas para leitura)
         async function submitTarefa(e) {
             e.preventDefault(); setBtnLoading('t_btn', true);
             const data = { nome: document.getElementById('t_nome').value, descricao: document.getElementById('t_desc').value, responsavel: document.getElementById('t_resp').value, categoria: document.getElementById('t_cat').value, prazo: document.getElementById('t_prazo').value };
@@ -877,7 +868,6 @@
             return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
         }
 
-        // Funções da Galeria e Preview mantidas
         async function openGallery(materialId) {
             const mat = appState.materiais.find(m => m.id === materialId); if(!mat) return;
             document.getElementById('galleryTitle').innerText = mat.titulo; document.getElementById('modalGallery').classList.add('active');
