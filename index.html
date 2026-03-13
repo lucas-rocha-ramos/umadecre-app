@@ -110,10 +110,8 @@
 </head>
 <body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
 
-    <!-- ÁUDIO DE ALERTA -->
     <audio id="audioAlertaAviso" loop playsinline src="alerta.ogg" preload="auto"></audio>
 
-    <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
         <div class="relative flex items-center justify-center w-72 h-72 mb-6 animate-fade-in">
             <img src="https://i.ibb.co/Rp3YHrVk/Icone-umadecre.png" alt="Logo Graça Criativa" class="w-full h-full object-contain drop-shadow-2xl">
@@ -122,7 +120,6 @@
         <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
     </div>
 
-    <!-- TELA DE LOGIN -->
     <div id="loginScreen" class="fixed inset-0 z-[200] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center p-6 transition-opacity duration-500">
         <div class="w-full max-w-sm">
             <div class="flex justify-center mb-8">
@@ -144,15 +141,12 @@
         </div>
     </div>
 
-    <!-- BOTÃO ADICIONAR FLUTUANTE (FAB) -->
     <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all">
         <i class="ph-bold ph-plus text-2xl"></i>
     </button>
 
-    <!-- MAIN CONTENT AREA -->
     <main class="px-4 max-w-3xl mx-auto min-h-screen pb-40">
         
-        <!-- HEADER DE PERFIL -->
         <div class="sticky top-0 z-40 pt-safe-top pb-4 -mx-4 px-4 bg-[#f2f2f7]/90 dark:bg-[#000000]/90 backdrop-blur-xl flex items-center justify-between mb-2">
             <div class="flex items-center gap-3">
                 <img id="user_profile_img" src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-800">
@@ -167,7 +161,6 @@
         </div>
         <div class="h-4"></div>
 
-        <!-- 1. INÍCIO (Dashboard) -->
         <div id="view-inicio" class="view-section space-y-6">
             <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
             <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
@@ -203,61 +196,49 @@
             </div>
         </div>
 
-        <!-- 2. TAREFAS (COM FLUXO INCORPORADO) -->
         <div id="view-tarefas" class="view-section hidden space-y-4">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-extrabold tracking-tight">Tarefas</h1>
             </div>
             <div id="tarefasList" class="space-y-4">
-                <!-- Gerado via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- 3. CONCLUÍDAS -->
         <div id="view-concluidas" class="view-section hidden space-y-4">
             <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
             <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
             <div id="concluidasList" class="space-y-4">
-                <!-- Gerado via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- 4. CHECKLIST -->
         <div id="view-checklist" class="view-section hidden space-y-4">
             <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
             <div class="glass-panel ios-card overflow-hidden">
                 <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800">
-                    <!-- Gerado via JS -->
-                </div>
+                    </div>
             </div>
         </div>
 
-        <!-- 5. MATERIAIS -->
         <div id="view-materiais" class="view-section hidden space-y-4">
             <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
             <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
             <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Gerado via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- 6. EQUIPE (ADMIN ONLY) -->
         <div id="view-equipe" class="view-section hidden space-y-4">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-extrabold tracking-tight">Equipe</h1>
                 <button onclick="openCreateAviso()" class="bg-red-500 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg active:scale-95 transition-transform"><i class="ph-bold ph-bell-ringing text-lg"></i> Criar Aviso</button>
             </div>
             <div id="equipeList" class="space-y-3">
-                <!-- Gerado via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- 7. CONFIGURAÇÕES -->
         <div id="view-config" class="view-section hidden space-y-6">
             <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
             
             <div class="glass-panel ios-card p-5 space-y-6">
-                <!-- Alterar Tema -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center">
@@ -268,7 +249,6 @@
                             <p class="text-xs text-gray-500">Alternar tema do aplicativo</p>
                         </div>
                     </div>
-                    <!-- Switch iOS Style -->
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
                         <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
@@ -277,7 +257,6 @@
 
                 <hr class="border-gray-200 dark:border-gray-800">
 
-                <!-- Sincronizar Dados -->
                 <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center">
@@ -292,17 +271,15 @@
                 </div>
             </div>
 
-            <!-- Informações App -->
             <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
                 <img src="https://i.ibb.co/Rp3YHrVk/Icone-umadecre.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
                 <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                <p class="text-[10px]">Versão 2.1 • Pro</p>
+                <p class="text-[10px]">Versão 2.2 • Pro</p>
             </div>
         </div>
 
     </main>
 
-    <!-- BOTTOM NAVIGATION -->
     <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl overflow-x-auto hide-scrollbar flex items-center gap-2">
         <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 min-w-[60px] flex-1 transition-colors" data-tab="inicio">
             <i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span>
@@ -328,9 +305,6 @@
         </button>
     </nav>
 
-    <!-- MODALS -->
-    
-    <!-- MODAL CREATE AVISO (ADMIN ONLY) -->
     <div id="modalCreateAviso" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
@@ -350,8 +324,7 @@
                     </select>
                     
                     <div id="av_usuarios_lista" class="hidden space-y-2 mt-4 max-h-48 overflow-y-auto hide-scrollbar">
-                        <!-- Preenchido via JS -->
-                    </div>
+                        </div>
                 </div>
 
                 <button type="submit" class="w-full py-4 rounded-2xl bg-red-600 text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
@@ -361,7 +334,6 @@
         </div>
     </div>
 
-    <!-- MODAL SHOW AVISO (IMPOSSIVEL FECHAR SEM CONFIRMAR) -->
     <div id="modalShowAviso" class="modal-overlay fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-md">
         <div class="modal-content w-full max-w-[340px] bg-red-600 rounded-[32px] p-1 shadow-2xl animate-spring-up mx-4">
             <div class="bg-white dark:bg-[#1C1C1E] rounded-[28px] p-6 text-center flex flex-col items-center">
@@ -379,7 +351,6 @@
         </div>
     </div>
 
-    <!-- MODAL TAREFA (COM FLUXO) -->
     <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
@@ -394,8 +365,7 @@
                 <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
                     <h3 class="font-bold mb-3 text-sm uppercase tracking-wide">Etapas do Fluxo</h3>
                     <div id="t_etapas_container" class="space-y-3 mb-3">
-                        <!-- Etapas dinâmicas inseridas via JS -->
-                    </div>
+                        </div>
                     <button type="button" onclick="addEtapaToForm()" class="w-full py-2 bg-white dark:bg-gray-700 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm text-iosBlue"><i class="ph-bold ph-plus"></i> Adicionar Etapa</button>
                 </div>
 
@@ -406,7 +376,6 @@
         </div>
     </div>
 
-    <!-- Modal Checklist -->
     <div id="modalChecklist" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
@@ -422,7 +391,6 @@
         </div>
     </div>
 
-    <!-- Modal Material -->
     <div id="modalMaterial" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -438,7 +406,6 @@
         </div>
     </div>
 
-    <!-- MODAL USUARIO -->
     <div id="modalUsuario" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
@@ -478,7 +445,6 @@
         </div>
     </div>
 
-    <!-- MODAL DETALHES DA TAREFA (HISTORICO) -->
     <div id="modalDetalheFluxo" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="flex justify-between items-center mb-4">
@@ -490,21 +456,18 @@
                 <div>
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-2">Linha do Tempo</h3>
                     <div class="relative border-l-2 border-gray-200 dark:border-gray-800 ml-3 space-y-4" id="det_f_timeline">
-                        <!-- Gerado via JS -->
-                    </div>
+                        </div>
                 </div>
 
                 <div>
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-2">Histórico (Logs)</h3>
                     <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 space-y-2 text-xs font-mono text-gray-600 dark:text-gray-400" id="det_f_logs">
-                        <!-- Gerado via JS -->
-                    </div>
+                        </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL GALERIA E PREVIEW (Mantidos) -->
     <div id="modalGallery" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col">
         <div class="pt-safe-top glass-panel relative z-10 border-b border-gray-300 dark:border-gray-800">
             <div class="flex items-center justify-between px-4 py-3">
@@ -538,6 +501,7 @@
         let currentUser = null; 
         let galleryCache = {}; 
         let currentAvisoId = null;
+        let pollingInterval = null;
 
         // Estado Global
         let appState = { 
@@ -562,6 +526,8 @@
                 renderAll(); 
                 splash.style.opacity = '0';
                 setTimeout(() => { splash.style.display = 'none'; }, 700);
+                
+                iniciarPolling();
             } else {
                 setTimeout(() => { 
                     splash.style.opacity = '0'; 
@@ -614,6 +580,8 @@
                 await fetchData();
                 renderAll();
                 
+                iniciarPolling();
+                
                 document.getElementById('loginScreen').style.opacity = '0';
                 setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 500);
             } else {
@@ -625,7 +593,16 @@
         function realizarLogout() {
             localStorage.removeItem('umadecre_user');
             currentUser = null;
+            if(pollingInterval) clearInterval(pollingInterval);
             window.location.reload();
+        }
+
+        // --- SISTEMA DE POLLING (SEGUNDO PLANO) ---
+        function iniciarPolling() {
+            if(pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => {
+                if(currentUser) fetchData();
+            }, 10000); // Checa novos avisos e tarefas a cada 10 segundos
         }
 
         // --- SISTEMA DE TEMA ---
@@ -675,9 +652,8 @@
                 if(data.tarefasFluxo) { 
                     appState = { ...appState, ...data }; 
                     renderAll(); 
-                    verificarNotificacoes();
                 }
-            } catch (error) { console.error("Erro ao carregar dados:", error); }
+            } catch (error) {}
         }
 
         async function forceSync() {
@@ -1459,22 +1435,24 @@
             if (audioUnlocked) return;
             const audio = document.getElementById('audioAlertaAviso');
             if (audio) {
-                // Tenta tocar rápido para liberar o elemento no celular
-                audio.play().then(() => {
-                    const modal = document.getElementById('modalShowAviso');
-                    // Se o modal não estiver aberto, pausa imediatamente. Se estiver, deixa tocando!
-                    if (!modal.classList.contains('active')) {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    }
-                    audioUnlocked = true;
-                    // Remove os listeners após o primeiro sucesso
-                    window.removeEventListener('touchstart', unlockAudio);
-                    window.removeEventListener('click', unlockAudio);
-                }).catch(() => {});
+                audio.volume = 0; // Silencia o teste
+                let playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        const modal = document.getElementById('modalShowAviso');
+                        if (!modal.classList.contains('active')) {
+                            audio.pause();
+                            audio.currentTime = 0;
+                        }
+                        audio.volume = 1; // Restaura o volume para tocar de verdade quando o alerta abrir
+                        audioUnlocked = true;
+                        window.removeEventListener('touchstart', unlockAudio);
+                        window.removeEventListener('click', unlockAudio);
+                    }).catch(() => {});
+                }
             }
         }
-        // Atrela a qualquer toque ou clique na ecrã para desbloquear
+        // Atrela a qualquer toque ou clique na ecrã para desbloquear silenciosamente
         window.addEventListener('touchstart', unlockAudio);
         window.addEventListener('click', unlockAudio);
         // -------------------------------------------------------------
