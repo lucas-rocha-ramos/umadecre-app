@@ -110,6 +110,9 @@
 </head>
 <body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
 
+    <!-- ÁUDIO DE ALERTA -->
+    <audio id="audioAlertaAviso" loop src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
     <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
         <div class="relative flex items-center justify-center w-72 h-72 mb-6 animate-fade-in">
@@ -240,7 +243,10 @@
 
         <!-- 6. EQUIPE (ADMIN ONLY) -->
         <div id="view-equipe" class="view-section hidden space-y-4">
-            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Equipe</h1>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-extrabold tracking-tight">Equipe</h1>
+                <button onclick="openCreateAviso()" class="bg-red-500 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg active:scale-95 transition-transform"><i class="ph-bold ph-bell-ringing text-lg"></i> Criar Aviso</button>
+            </div>
             <div id="equipeList" class="space-y-3">
                 <!-- Gerado via JS -->
             </div>
@@ -324,6 +330,55 @@
 
     <!-- MODALS -->
     
+    <!-- MODAL CREATE AVISO (ADMIN ONLY) -->
+    <div id="modalCreateAviso" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-red-600 flex items-center gap-2"><i class="ph-bold ph-bell-ringing"></i> Novo Aviso</h2>
+                <button onclick="closeModal('modalCreateAviso')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <form id="formAviso" onsubmit="submitAviso(event)" class="space-y-4">
+                <input type="text" id="av_titulo" placeholder="Título do Aviso (Ex: Urgente)" class="ios-input border border-red-100 dark:border-red-900/30" required>
+                <textarea id="av_desc" placeholder="Mensagem do aviso..." class="ios-input h-24 resize-none border border-red-100 dark:border-red-900/30" required></textarea>
+                
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                    <h3 class="font-bold mb-3 text-sm uppercase tracking-wide">Destinatários</h3>
+                    <select id="av_alvo_tipo" class="ios-input py-3 text-sm font-semibold" onchange="toggleAlvoUsuarios()">
+                        <option value="todos">Todos da Equipe</option>
+                        <option value="especificos">Selecionar Integrantes...</option>
+                    </select>
+                    
+                    <div id="av_usuarios_lista" class="hidden space-y-2 mt-4 max-h-48 overflow-y-auto hide-scrollbar">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 rounded-2xl bg-red-600 text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="av_btn_text">Disparar Alerta</span><i id="av_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SHOW AVISO (IMPOSSIVEL FECHAR SEM CONFIRMAR) -->
+    <div id="modalShowAviso" class="modal-overlay fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-md">
+        <div class="modal-content w-full max-w-[340px] bg-red-600 rounded-[32px] p-1 shadow-2xl animate-spring-up mx-4">
+            <div class="bg-white dark:bg-[#1C1C1E] rounded-[28px] p-6 text-center flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 flex items-center justify-center mb-4 animate-pulse shadow-lg shadow-red-500/20">
+                    <i class="ph-fill ph-warning-circle text-4xl"></i>
+                </div>
+                <h2 id="show_aviso_titulo" class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">Atenção!</h2>
+                <p id="show_aviso_desc" class="text-gray-500 text-sm mb-8 leading-relaxed">...</p>
+                
+                <button onclick="confirmarRecebimentoAviso()" class="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-lg active:scale-95 transition-transform shadow-xl shadow-red-600/30 flex justify-center items-center gap-2">
+                    <span id="conf_av_btn_text">Confirmar Recebimento</span>
+                    <i id="conf_av_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL TAREFA (COM FLUXO) -->
     <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
@@ -482,6 +537,7 @@
         let currentGalleryFiles = [];
         let currentUser = null; 
         let galleryCache = {}; 
+        let currentAvisoId = null;
 
         // Estado Global
         let appState = { 
@@ -489,7 +545,8 @@
             tarefasFluxo: [], 
             checklist: [], 
             materiais: [],
-            usuarios: []
+            usuarios: [],
+            avisos: []
         };
 
         // --- INICIALIZAÇÃO & AUTH ---
@@ -654,7 +711,7 @@
                 if(tabName === 'concluidas' || tabName === 'config') { 
                     btn.style.display = 'none'; 
                 } else if ((tabName === 'tarefas' || tabName === 'equipe') && currentUser.TipoUsuario !== 'admin') {
-                    btn.style.display = 'none'; // Apenas admin cria tarefas (fluxo) ou equipe
+                    btn.style.display = 'none'; 
                 } else { 
                     btn.style.display = 'flex'; 
                 }
@@ -671,6 +728,7 @@
             renderChecklist(); 
             renderMateriais();
             renderEquipe();
+            verificarAvisosAlerta(); // Dispara popup de aviso se houver
         }
 
         function renderDashboard() {
@@ -713,7 +771,129 @@
             `).join('');
         }
 
-        // --- RENDER TAREFAS (AGORA SÃO O FLUXO) ---
+        // --- SISTEMA DE AVISOS (ALERTAS) ---
+        function openCreateAviso() {
+            document.getElementById('av_titulo').value = '';
+            document.getElementById('av_desc').value = '';
+            document.getElementById('av_alvo_tipo').value = 'todos';
+            toggleAlvoUsuarios();
+            
+            const container = document.getElementById('av_usuarios_lista');
+            container.innerHTML = appState.usuarios.filter(u => (u.ID || u.id) !== currentUser.ID).map(u => `
+                <label class="flex items-center gap-3 p-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer">
+                    <input type="checkbox" value="${u.ID || u.id}" class="av_check_user w-5 h-5 text-iosBlue rounded focus:ring-iosBlue">
+                    <span class="text-sm font-semibold">${u.Nome}</span>
+                </label>
+            `).join('');
+            
+            openModal('modalCreateAviso');
+        }
+
+        function toggleAlvoUsuarios() {
+            const tipo = document.getElementById('av_alvo_tipo').value;
+            const lista = document.getElementById('av_usuarios_lista');
+            if(tipo === 'especificos') lista.classList.remove('hidden');
+            else lista.classList.add('hidden');
+        }
+
+        async function submitAviso(e) {
+            e.preventDefault();
+            setBtnLoading('av_btn', true);
+            
+            const tipo = document.getElementById('av_alvo_tipo').value;
+            let usuariosSelecionados = [];
+            if(tipo === 'especificos') {
+                document.querySelectorAll('.av_check_user:checked').forEach(el => usuariosSelecionados.push(el.value));
+                if(usuariosSelecionados.length === 0) {
+                    alert("Selecione pelo menos um usuário.");
+                    setBtnLoading('av_btn', false);
+                    return;
+                }
+            }
+            
+            const data = {
+                titulo: document.getElementById('av_titulo').value,
+                descricao: document.getElementById('av_desc').value,
+                alvoTipo: tipo,
+                alvoUsuarios: usuariosSelecionados
+            };
+
+            const res = await apiRequest({ action: 'addAviso', data: data });
+            if(res.success) {
+                closeModal('modalCreateAviso');
+                forceSync();
+            } else {
+                alert("Erro ao criar aviso.");
+            }
+            setBtnLoading('av_btn', false);
+        }
+
+        function verificarAvisosAlerta() {
+            if(!currentUser || !appState.avisos) return;
+            const modal = document.getElementById('modalShowAviso');
+            if(modal.classList.contains('active')) return; // Já tem um na tela
+            
+            const meusAvisos = appState.avisos.filter(a => {
+                let alvo = a.Alvo || a.alvo;
+                let recebedores = [];
+                
+                try { if(alvo !== 'todos') alvo = JSON.parse(alvo); } catch(e){}
+                try { recebedores = JSON.parse(a.Recebedores || a.recebedores || "[]"); } catch(e){}
+                
+                const souAlvo = alvo === 'todos' || (Array.isArray(alvo) && alvo.includes(currentUser.ID));
+                const jaRecebi = Array.isArray(recebedores) && recebedores.includes(currentUser.ID);
+                
+                return souAlvo && !jaRecebi;
+            });
+
+            if(meusAvisos.length > 0) {
+                exibirAviso(meusAvisos[0]);
+            }
+        }
+
+        function exibirAviso(aviso) {
+            currentAvisoId = aviso.ID || aviso.id;
+            document.getElementById('show_aviso_titulo').innerText = aviso.Titulo || aviso.titulo;
+            document.getElementById('show_aviso_desc').innerText = aviso.Descricao || aviso.descricao;
+            
+            const modal = document.getElementById('modalShowAviso');
+            modal.classList.add('active');
+            
+            const audio = document.getElementById('audioAlertaAviso');
+            audio.currentTime = 0;
+            // O Play pode falhar se o usuário não interagiu com a tela, mas num PWA ou clique prévio, funciona perfeitamente
+            audio.play().catch(e => console.log("Áudio aguardando interação do usuário."));
+        }
+
+        async function confirmarRecebimentoAviso() {
+            if(!currentAvisoId) return;
+            setBtnLoading('conf_av_btn', true);
+            
+            const audio = document.getElementById('audioAlertaAviso');
+            audio.pause();
+            audio.currentTime = 0;
+            
+            // Otimista
+            const aIdx = appState.avisos.findIndex(a => (a.ID || a.id) === currentAvisoId);
+            if(aIdx > -1) {
+                let rec = [];
+                try { rec = JSON.parse(appState.avisos[aIdx].Recebedores || appState.avisos[aIdx].recebedores || "[]"); } catch(e){}
+                rec.push(currentUser.ID);
+                appState.avisos[aIdx].Recebedores = JSON.stringify(rec);
+                appState.avisos[aIdx].recebedores = JSON.stringify(rec);
+            }
+            
+            document.getElementById('modalShowAviso').classList.remove('active');
+            await apiRequest({ action: 'confirmarAviso', data: { avisoId: currentAvisoId } });
+            
+            setBtnLoading('conf_av_btn', false);
+            currentAvisoId = null;
+            
+            // Checa se tem mais de um na fila
+            setTimeout(verificarAvisosAlerta, 800);
+        }
+
+        // --- RENDER TAREFAS ---
         function renderTarefas() {
             const list = document.getElementById('tarefasList');
             let tarefas = appState.tarefasFluxo;
