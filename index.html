@@ -481,7 +481,7 @@
         let editingItemId = null;
         let currentGalleryFiles = [];
         let currentUser = null; 
-        let galleryCache = {}; // Armazena as fotos já carregadas
+        let galleryCache = {}; 
 
         // Estado Global
         let appState = { 
@@ -1208,19 +1208,20 @@
                     thumbUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
                 }
 
-                // Usamos w-full pt-[100%] e absolute inset-0 para manter o aspecto quadrado mesmo em iOS antigos
                 return `
-                <div onclick="openPreview(${index})" class="rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer w-full pt-[100%]">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <div class="w-full relative block">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" class="w-full block opacity-0 pointer-events-none" alt="">
+                    <div onclick="openPreview(${index})" class="absolute inset-0 rounded-2xl bg-gradient-to-br ${bgColors} overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer flex flex-col items-center justify-center">
+                        
                         ${(file.id && !isVideo) ? `<img src="${thumbUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">` : ''}
                         
-                        <div class="absolute inset-0 bg-black/20"></div>
+                        <div class="absolute inset-0 bg-black/20 pointer-events-none"></div>
                         
-                        ${isVideo || !file.id ? `<i class="ph-fill ${icon} text-4xl mb-2 text-white/50 relative z-10"></i>` : ''}
+                        ${isVideo || !file.id ? `<i class="ph-fill ${icon} text-4xl mb-2 text-white/50 relative z-10 pointer-events-none"></i>` : ''}
                         
-                        ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1 z-10"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
+                        ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1 z-10 pointer-events-none"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
                         
-                        <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent z-10">
+                        <div class="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none">
                             <p class="text-white text-[11px] font-semibold truncate">${file.name}</p>
                         </div>
                     </div>
@@ -1249,10 +1250,8 @@
             setTimeout(() => {
                 if (file.url.includes('drive.google.com') && file.id) { 
                     if (isVideo) {
-                        // Vídeo no Drive: melhor usar iframe player do Drive
                         container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`;
                     } else {
-                        // Imagem no Drive: usa lh3 ou iframe em caso de bloqueio
                         const imgUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
                         container.innerHTML = `<img src="${imgUrl}" alt="${file.name}" class="w-full max-h-full object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<iframe src=\\'https://drive.google.com/file/d/${file.id}/preview\\' class=\\'w-full h-full border-0\\' allow=\\'fullscreen\\'></iframe>';">`;
                     }
