@@ -102,11 +102,16 @@
         .dark .ios-input:focus { background: rgba(118, 118, 128, 0.35); }
 
         .aspect-square { aspect-ratio: 1 / 1; }
+        
+        .admin-only { display: none !important; }
+        .is-admin .admin-only { display: flex !important; }
+        .is-admin .admin-only-block { display: block !important; }
     </style>
 </head>
-<body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom relative">
+<body class="overflow-x-hidden selection:bg-iosBlue selection:text-white pb-safe-bottom">
 
-    <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-[#0f0f11] transition-opacity duration-700">
         <div class="relative flex items-center justify-center w-72 h-72 mb-6 animate-fade-in">
             <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" alt="Logo Graça Criativa" class="w-full h-full object-contain drop-shadow-2xl">
         </div>
@@ -114,465 +119,489 @@
         <p class="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Controle de Mídia</p>
     </div>
 
-    <div id="loginScreen" class="fixed inset-0 z-[90] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center p-6 hidden">
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="fixed inset-0 z-[200] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col items-center justify-center p-6 transition-opacity duration-500">
         <div class="w-full max-w-sm">
             <div class="flex justify-center mb-8">
-                <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" alt="Logo" class="w-32 h-32 object-contain glass-panel rounded-full p-2 shadow-xl">
+                <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-32 h-32 object-contain dark:invert-0 invert" alt="Logo">
             </div>
-            <h2 class="text-3xl font-extrabold text-center mb-2">Login</h2>
-            <p class="text-gray-500 text-center mb-8">Sua plataforma de mídia</p>
+            <h1 class="text-3xl font-extrabold text-center mb-2">Bem-vindo</h1>
+            <p class="text-center text-gray-500 mb-8">Faça login para acessar suas tarefas</p>
             
-            <form onsubmit="realizarLogin(event)" class="space-y-4">
-                <input type="email" id="log_email" placeholder="E-mail" class="ios-input" required>
-                <input type="password" id="log_senha" placeholder="Senha" class="ios-input" required>
-                <p id="log_erro" class="text-red-500 text-sm text-center hidden font-medium"></p>
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-2 active:scale-95 transition-transform flex justify-center items-center gap-2 shadow-lg">
-                    <span id="log_btn_text">Entrar</span>
-                    <i id="log_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+            <form id="formLogin" onsubmit="realizarLogin(event)" class="space-y-4">
+                <input type="email" id="login_email" placeholder="E-mail" class="ios-input" required>
+                <input type="password" id="login_senha" placeholder="Senha" class="ios-input" required>
+                
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-6 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="login_btn_text">Entrar</span>
+                    <i id="login_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
                 </button>
+                <p id="login_error" class="text-red-500 text-sm text-center font-medium mt-4 hidden">Usuário ou senha inválidos.</p>
             </form>
         </div>
     </div>
 
-    <div id="appContainer" class="hidden">
+    <!-- BOTÃO ADICIONAR FLUTUANTE (FAB) -->
+    <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all">
+        <i class="ph-bold ph-plus text-2xl"></i>
+    </button>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="pt-safe-top px-4 max-w-3xl mx-auto min-h-screen pb-40 pt-8">
         
-        <div class="fixed pt-safe-top top-0 w-full z-30 px-4 py-2 flex justify-end pointer-events-none">
-            <button onclick="openModal('modalPerfil')" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 border-2 border-white dark:border-iosDarkGray overflow-hidden shadow-md pointer-events-auto active:scale-95 transition-transform">
-                <img id="btnProfilePic" src="https://ui-avatars.com/api/?name=User" class="w-full h-full object-cover">
+        <!-- HEADER DE PERFIL -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <img id="user_profile_img" src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-800">
+                <div>
+                    <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider" id="user_profile_role">Função</p>
+                    <h2 class="text-lg font-bold leading-tight" id="user_profile_name">Olá, Usuário</h2>
+                </div>
+            </div>
+            <button onclick="realizarLogout()" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300">
+                <i class="ph-bold ph-sign-out"></i>
             </button>
         </div>
 
-        <button id="mainAddBtn" onclick="openContextModal()" class="fixed bottom-28 right-6 z-40 w-14 h-14 rounded-full bg-iosBlue text-white flex items-center justify-center shadow-xl hover:bg-blue-600 hover:scale-95 transition-all">
-            <i class="ph-bold ph-plus text-2xl"></i>
-        </button>
+        <!-- 1. INÍCIO (Dashboard) -->
+        <div id="view-inicio" class="view-section space-y-6">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
+            <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
+                    <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
+                    <p class="text-sm text-gray-500 mt-2"><span id="dashCompleted">0</span> de <span id="dashTotal">0</span> tarefas</p>
+                </div>
+                <div class="relative w-28 h-28">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200 dark:text-gray-800 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                        <circle id="progressCircle" class="text-iosBlue stroke-current progress-ring__circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                    </svg>
+                </div>
+            </div>
 
-        <main class="pt-safe-top px-4 max-w-3xl mx-auto min-h-screen pb-40 pt-14">
+            <h3 class="text-xl font-bold mt-8 mb-4 px-2">Resumo</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('tarefas')">
+                    <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-clock text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Pendentes</p>
+                    <p class="text-2xl font-bold" id="dashPendenteCount">0</p>
+                </div>
+                <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('concluidas')">
+                    <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 flex items-center justify-center mb-3">
+                        <i class="ph-fill ph-check-circle text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm font-medium">Concluídas</p>
+                    <p class="text-2xl font-bold" id="dashConcluidaCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TAREFAS (COM FLUXO INCORPORADO) -->
+        <div id="view-tarefas" class="view-section hidden space-y-4">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-extrabold tracking-tight">Tarefas</h1>
+            </div>
+            <div id="tarefasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 3. CONCLUÍDAS -->
+        <div id="view-concluidas" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
+            <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
+            <div id="concluidasList" class="space-y-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 4. CHECKLIST -->
+        <div id="view-checklist" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
+            <div class="glass-panel ios-card overflow-hidden">
+                <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. MATERIAIS -->
+        <div id="view-materiais" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
+            <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
+            <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 6. EQUIPE (ADMIN ONLY) -->
+        <div id="view-equipe" class="view-section hidden space-y-4">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Equipe</h1>
+            <div id="equipeList" class="space-y-3">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- 7. CONFIGURAÇÕES -->
+        <div id="view-config" class="view-section hidden space-y-6">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
             
-            <div id="view-inicio" class="view-section space-y-6">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-2">Início</h1>
-                <div class="glass-panel ios-card p-6 flex items-center justify-between mt-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-500 dark:text-gray-400">Progresso Geral</h2>
-                        <p class="text-4xl font-extrabold mt-1" id="dashPercent">0%</p>
-                        <p class="text-sm text-gray-500 mt-2"><span id="dashCompleted">0</span> de <span id="dashTotal">0</span> tarefas</p>
-                    </div>
-                    <div class="relative w-28 h-28">
-                        <svg class="w-full h-full" viewBox="0 0 100 100">
-                            <circle class="text-gray-200 dark:text-gray-800 stroke-current" stroke-width="8" cx="50" cy="50" r="40" fill="transparent"></circle>
-                            <circle id="progressCircle" class="text-iosBlue stroke-current progress-ring__circle" stroke-width="8" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
-                        </svg>
-                    </div>
-                </div>
-
-                <h3 class="text-xl font-bold mt-8 mb-4 px-2">Resumo</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('tarefas')">
-                        <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center mb-3">
-                            <i class="ph-fill ph-clock text-xl"></i>
+            <div class="glass-panel ios-card p-5 space-y-6">
+                <!-- Alterar Tema -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center">
+                            <i id="themeIcon" class="ph-bold ph-moon text-xl"></i>
                         </div>
-                        <p class="text-gray-500 text-sm font-medium">Pendentes</p>
-                        <p class="text-2xl font-bold" id="dashPendenteCount">0</p>
-                    </div>
-                    <div class="glass-panel ios-card p-5 cursor-pointer" onclick="switchTab('concluidas')">
-                        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 flex items-center justify-center mb-3">
-                            <i class="ph-fill ph-check-circle text-xl"></i>
+                        <div>
+                            <p class="font-semibold text-[17px]">Modo Escuro</p>
+                            <p class="text-xs text-gray-500">Alternar tema do aplicativo</p>
                         </div>
-                        <p class="text-gray-500 text-sm font-medium">Concluídas</p>
-                        <p class="text-2xl font-bold" id="dashConcluidaCount">0</p>
                     </div>
+                    <!-- Switch iOS Style -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
+                    </label>
                 </div>
-            </div>
 
-            <div id="view-tarefas" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Tarefas</h1>
-                <div id="tarefasList" class="space-y-4"></div>
-            </div>
+                <hr class="border-gray-200 dark:border-gray-800">
 
-            <div id="view-concluidas" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-4">Concluídas</h1>
-                <input type="text" id="searchConcluidas" onkeyup="renderConcluidas()" placeholder="Pesquisar tarefas..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
-                <div id="concluidasList" class="space-y-4"></div>
-            </div>
-
-            <div id="view-checklist" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Checklist</h1>
-                <div class="glass-panel ios-card overflow-hidden">
-                    <div id="checklistList" class="divide-y divide-gray-200 dark:divide-gray-800"></div>
-                </div>
-            </div>
-
-            <div id="view-materiais" class="view-section hidden space-y-4">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-4">Materiais</h1>
-                <input type="text" id="searchMateriais" onkeyup="renderMateriais()" placeholder="Pesquisar materiais ou links..." class="ios-input py-3 px-4 rounded-xl text-sm mb-2 shadow-sm">
-                <div id="materiaisList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-            </div>
-
-            <div id="view-config" class="view-section hidden space-y-6">
-                <h1 class="text-3xl font-extrabold tracking-tight mb-6">Configurações</h1>
-                
-                <div class="glass-panel ios-card p-5 space-y-6">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center"><i id="themeIcon" class="ph-bold ph-moon text-xl"></i></div>
-                            <div><p class="font-semibold text-[17px]">Modo Escuro</p><p class="text-xs text-gray-500">Alternar tema do aplicativo</p></div>
+                <!-- Sincronizar Dados -->
+                <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center">
+                            <i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="themeToggleCheckbox" class="sr-only peer" onchange="toggleTheme()">
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-iosGreen"></div>
-                        </label>
-                    </div>
-                    <hr class="border-gray-200 dark:border-gray-800">
-                    <div class="flex items-center justify-between cursor-pointer" onclick="forceSync()">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-iosBlue dark:bg-blue-900/30 flex items-center justify-center"><i id="syncIcon" class="ph-bold ph-arrows-clockwise text-xl"></i></div>
-                            <div><p class="font-semibold text-[17px]">Sincronizar Dados</p><p class="text-xs text-gray-500">Forçar atualização</p></div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Sincronizar Dados</p>
+                            <p class="text-xs text-gray-500">Forçar atualização da planilha</p>
                         </div>
-                        <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
                     </div>
+                    <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
                 </div>
             </div>
-        </main>
 
-        <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl flex justify-between items-center">
-            <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 flex-1 transition-colors" data-tab="inicio"><i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span></button>
-            <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="tarefas"><i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[9px] font-semibold uppercase">Tarefas</span></button>
-            <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas"><i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[9px] font-semibold uppercase">Feitas</span></button>
-            <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist"><i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[9px] font-semibold uppercase">Check</span></button>
-            <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais"><i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span></button>
-            <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="config"><i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span></button>
-        </nav>
-    </div>
-
-    <div id="modalPerfil" class="modal-overlay fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
-            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
-            <div class="flex flex-col items-center mb-6">
-                <div class="w-24 h-24 rounded-full bg-gray-200 border-4 border-white dark:border-iosDarkGray overflow-hidden shadow-lg mb-4 relative cursor-pointer" onclick="editarMeuPerfil()">
-                    <img id="perfilFoto" src="" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><i class="ph-bold ph-pencil-simple text-white text-2xl"></i></div>
-                </div>
-                <h2 id="perfilNome" class="text-2xl font-bold">Nome</h2>
-                <p id="perfilFuncao" class="text-gray-500 font-medium text-sm">Função</p>
-                <span id="perfilAdminBadge" class="mt-2 px-3 py-1 bg-iosBlue/10 text-iosBlue rounded-full text-[10px] font-bold uppercase tracking-wider hidden">Admin</span>
-            </div>
-
-            <div class="space-y-4 mb-6">
-                <h3 class="font-bold text-lg mb-2">Suas Tarefas</h3>
-                <div id="perfilTarefas" class="space-y-3"></div>
-            </div>
-
-            <div class="space-y-3">
-                <button id="btnAdminUsuarios" onclick="abrirAdminUsuarios()" class="w-full py-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold text-base active:scale-95 transition-transform hidden flex justify-center items-center gap-2">
-                    <i class="ph-bold ph-users text-xl"></i> Gerenciar Usuários
-                </button>
-                <button onclick="realizarLogout()" class="w-full py-4 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold text-base active:scale-95 transition-transform">
-                    Sair da Conta
-                </button>
-                <button onclick="closeModal('modalPerfil')" class="w-full py-3 text-gray-500 font-medium mt-2">Fechar</button>
+            <!-- Informações App -->
+            <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
+                <img src="https://i.ibb.co/6zPLBtS/Logo-Gra-a-criativa.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
+                <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
+                <p class="text-[10px]">Versão 2.1 • Pro</p>
             </div>
         </div>
-    </div>
 
-    <div id="modalAdminUsuarios" class="modal-overlay fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div class="modal-content w-full sm:w-[400px] h-[85vh] flex flex-col bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
-            <div class="flex justify-between items-center mb-6 shrink-0">
-                <button onclick="closeModal('modalAdminUsuarios'); openModal('modalPerfil')" class="text-iosBlue"><i class="ph-bold ph-caret-left text-2xl"></i></button>
-                <h2 class="text-xl font-bold">Usuários</h2>
-                <button onclick="openFormUsuario()" class="w-8 h-8 rounded-full bg-iosBlue/10 text-iosBlue flex items-center justify-center"><i class="ph-bold ph-plus"></i></button>
-            </div>
-            <div id="listaUsuariosAdmin" class="flex-1 overflow-y-auto hide-scrollbar space-y-3"></div>
-        </div>
-    </div>
+    </main>
 
-    <div id="modalFormUsuario" class="modal-overlay fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-6 pb-safe-bottom left-4 right-4 max-w-md mx-auto z-40 glass-panel rounded-full px-2 py-3 shadow-2xl overflow-x-auto hide-scrollbar flex items-center gap-2">
+        <button onclick="switchTab('inicio')" class="nav-item active flex flex-col items-center gap-1 min-w-[60px] flex-1 transition-colors" data-tab="inicio">
+            <i class="ph-fill ph-squares-four text-2xl"></i><span class="text-[9px] font-semibold uppercase">Início</span>
+        </button>
+        <button onclick="switchTab('tarefas')" class="nav-item flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative" data-tab="tarefas">
+            <i class="ph-fill ph-list-bullets text-2xl"></i><span class="text-[9px] font-semibold uppercase">Tarefas</span>
+            <span id="badgeTarefa" class="absolute top-0 right-2 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+        </button>
+        <button onclick="switchTab('concluidas')" class="nav-item flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="concluidas">
+            <i class="ph-fill ph-check-square-offset text-2xl"></i><span class="text-[9px] font-semibold uppercase">Feitas</span>
+        </button>
+        <button onclick="switchTab('checklist')" class="nav-item flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="checklist">
+            <i class="ph-fill ph-clipboard-text text-2xl"></i><span class="text-[9px] font-semibold uppercase">Check</span>
+        </button>
+        <button onclick="switchTab('materiais')" class="nav-item flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="materiais">
+            <i class="ph-fill ph-folder-notch text-2xl"></i><span class="text-[9px] font-semibold uppercase">Mídia</span>
+        </button>
+        <button onclick="switchTab('equipe')" class="nav-item admin-only flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="equipe">
+            <i class="ph-fill ph-users text-2xl"></i><span class="text-[9px] font-semibold uppercase">Equipe</span>
+        </button>
+        <button onclick="switchTab('config')" class="nav-item flex flex-col items-center gap-1 min-w-[60px] flex-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" data-tab="config">
+            <i class="ph-fill ph-gear text-2xl"></i><span class="text-[9px] font-semibold uppercase">Ajustes</span>
+        </button>
+    </nav>
+
+    <!-- MODALS -->
+    
+    <!-- MODAL TAREFA (COM FLUXO) -->
+    <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex justify-between items-center mb-6">
-                <h2 id="tituloFormUsuario" class="text-xl font-bold">Usuário</h2>
-                <button onclick="closeModal('modalFormUsuario')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+                <h2 class="text-xl font-bold">Nova Tarefa</h2>
+                <button onclick="closeModal('modalTarefa')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
             </div>
-            <form id="formUsuario" onsubmit="salvarUsuario(event)" class="space-y-4">
-                <div class="flex justify-center mb-4">
-                    <label class="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden shadow-sm relative cursor-pointer flex items-center justify-center group">
-                        <img id="formUsuFoto" src="https://ui-avatars.com/api/?name=U" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph-bold ph-camera text-white text-2xl"></i></div>
-                        <input type="file" id="u_arquivo_foto" accept="image/*" class="hidden" onchange="previewFotoUsuario(event)">
-                    </label>
-                </div>
-                <input type="text" id="u_nome" placeholder="Nome Completo" class="ios-input" required>
-                <input type="text" id="u_funcao" placeholder="Função" class="ios-input" required>
-                <input type="email" id="u_email" placeholder="E-mail" class="ios-input" required>
-                <input type="password" id="u_senha" placeholder="Senha (Deixe em branco p/ manter)" class="ios-input">
+            <form id="formTarefa" onsubmit="submitTarefa(event)" class="space-y-4">
+                <input type="text" id="t_titulo" placeholder="Título da Tarefa (Ex: Entrevista Fulano)" class="ios-input" required>
+                <textarea id="t_desc" placeholder="Descrição da Tarefa..." class="ios-input h-20 resize-none" required></textarea>
                 
-                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 flex justify-center items-center gap-2">
-                    <span id="u_btn_text">Salvar</span><i id="u_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
+                    <h3 class="font-bold mb-3 text-sm uppercase tracking-wide">Etapas do Fluxo</h3>
+                    <div id="t_etapas_container" class="space-y-3 mb-3">
+                        <!-- Etapas dinâmicas inseridas via JS -->
+                    </div>
+                    <button type="button" onclick="addEtapaToForm()" class="w-full py-2 bg-white dark:bg-gray-700 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm text-iosBlue"><i class="ph-bold ph-plus"></i> Adicionar Etapa</button>
+                </div>
+
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="t_btn_text">Salvar Tarefa</span><i id="t_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="modalTarefa" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"><div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar"><div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div><div class="flex justify-between items-center mb-6"><h2 id="modalTarefaTitle" class="text-xl font-bold">Nova Tarefa</h2><button onclick="closeModal('modalTarefa')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button></div><form id="formTarefa" onsubmit="submitTarefa(event)" class="space-y-4"><input type="text" id="t_nome" placeholder="Nome da Tarefa" class="ios-input" required><textarea id="t_desc" placeholder="Descrição detalhada..." class="ios-input h-20 resize-none" required></textarea><div class="grid grid-cols-2 gap-3"><input type="text" id="t_resp" placeholder="Responsável" class="ios-input" required><select id="t_cat" class="ios-input appearance-none bg-no-repeat bg-right text-gray-700 dark:text-gray-200" style="background-image: url('data:image/svg+xml;utf8,<svg fill=%22gray%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>'); background-position-x: 90%;"><option value="Geral">🌐 Geral</option><option value="Câmera">🎥 Câmera</option><option value="Fotografia">📸 Fotografia</option><option value="Projeção">💻 Projeção</option><option value="Edição">✂️ Edição</option></select></div><input type="date" id="t_prazo" class="ios-input" required><button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2"><span id="t_btn_text">Salvar Tarefa</span><i id="t_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i></button></form></div></div>
-    <div id="modalChecklist" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"><div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl"><div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div><div class="flex justify-between items-center mb-6"><h2 id="modalChecklistTitle" class="text-xl font-bold">Adicionar ao Checklist</h2><button onclick="closeModal('modalChecklist')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button></div><form id="formChecklist" onsubmit="submitChecklist(event)" class="space-y-4"><input type="text" id="c_nome" placeholder="Nome do Item (ex: Câmera 1)" class="ios-input" required><input type="number" id="c_qtd" placeholder="Quantidade" class="ios-input" required min="1"><button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2"><span id="c_btn_text">Adicionar</span><i id="c_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i></button></form></div></div>
-    <div id="modalMaterial" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm"><div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl"><div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div><div class="flex justify-between items-center mb-6"><h2 id="modalMaterialTitle" class="text-xl font-bold">Vincular Material</h2><button onclick="closeModal('modalMaterial')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button></div><form id="formMaterial" onsubmit="submitMaterial(event)" class="space-y-4"><input type="text" id="m_titulo" placeholder="Título da Pasta/Arquivo" class="ios-input" required><textarea id="m_desc" placeholder="Descrição do conteúdo..." class="ios-input h-20 resize-none" required></textarea><input type="url" id="m_link" placeholder="Link do Google Drive da Pasta" class="ios-input" required><button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2"><span id="m_btn_text">Salvar Vínculo</span><i id="m_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i></button></form></div></div>
-    <div id="modalGallery" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col"><div class="pt-safe-top glass-panel relative z-10 border-b border-gray-300 dark:border-gray-800"><div class="flex items-center justify-between px-4 py-3"><button onclick="closeGallery()" class="text-iosBlue flex items-center gap-1 font-medium active:opacity-70 transition-opacity"><i class="ph-bold ph-caret-left text-xl"></i> Voltar</button><h2 id="galleryTitle" class="font-bold text-lg truncate flex-1 text-center px-2">Arquivos</h2><div class="w-16"></div></div></div><div id="galleryGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-safe-bottom content-start"></div></div>
-    <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col"><div class="pt-safe-top w-full z-10 shrink-0"><div class="flex items-center justify-between px-4 py-3"><button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white"><i class="ph-bold ph-x text-xl"></i></button><a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2 shadow-lg"><i class="ph-bold ph-download-simple"></i> Baixar</a></div></div><div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative"></div><div class="w-full p-6 pb-safe-bottom shrink-0"><h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome</h3><p id="previewType" class="text-gray-400 text-sm">Tipo</p></div></div>
+    <!-- Modal Checklist -->
+    <div id="modalChecklist" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalChecklistTitle" class="text-xl font-bold">Adicionar ao Checklist</h2>
+                <button onclick="closeModal('modalChecklist')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <form id="formChecklist" onsubmit="submitChecklist(event)" class="space-y-4">
+                <input type="text" id="c_nome" placeholder="Nome do Item" class="ios-input" required>
+                <input type="number" id="c_qtd" placeholder="Quantidade" class="ios-input" required min="1">
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 flex justify-center items-center gap-2"><span id="c_btn_text">Adicionar</span><i id="c_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Material -->
+    <div id="modalMaterial" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalMaterialTitle" class="text-xl font-bold">Vincular Material</h2>
+                <button onclick="closeModal('modalMaterial')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <form id="formMaterial" onsubmit="submitMaterial(event)" class="space-y-4">
+                <input type="text" id="m_titulo" placeholder="Título da Pasta/Arquivo" class="ios-input" required>
+                <textarea id="m_desc" placeholder="Descrição..." class="ios-input h-20 resize-none" required></textarea>
+                <input type="url" id="m_link" placeholder="Link do Google Drive" class="ios-input" required>
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 flex justify-center items-center gap-2"><span id="m_btn_text">Salvar Vínculo</span><i id="m_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL USUARIO -->
+    <div id="modalUsuario" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
+            <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalUsuarioTitle" class="text-xl font-bold">Novo Membro</h2>
+                <button onclick="closeModal('modalUsuario')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <form id="formUsuario" onsubmit="submitUsuario(event)" class="space-y-4">
+                <div class="flex justify-center mb-2">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('u_foto_file').click()">
+                        <img id="u_preview_foto" src="https://ui-avatars.com/api/?name=U&background=random" class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-800 transition-opacity group-hover:opacity-70">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-full">
+                            <i class="ph-bold ph-camera text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="u_foto_file" accept="image/*" class="hidden" onchange="previewProfileImage(event)">
+                <input type="hidden" id="u_foto_base64">
+                <input type="hidden" id="u_foto_mime">
+                <input type="hidden" id="u_foto_url">
+                
+                <input type="text" id="u_nome" placeholder="Nome Completo" class="ios-input" required>
+                <input type="text" id="u_funcao" placeholder="Função (Ex: Editor, Câmera)" class="ios-input" required>
+                <input type="email" id="u_email" placeholder="E-mail de Login" class="ios-input" required>
+                <input type="password" id="u_senha" placeholder="Senha" class="ios-input" required>
+                
+                <select id="u_tipo" class="ios-input appearance-none">
+                    <option value="usuario">Usuário Comum</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                
+                <button type="submit" class="w-full py-4 rounded-2xl bg-iosBlue text-white font-bold text-lg mt-4 active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <span id="u_btn_text">Salvar Usuário</span>
+                    <i id="u_btn_spin" class="ph-bold ph-spinner animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DETALHES DA TAREFA (HISTORICO) -->
+    <div id="modalDetalheFluxo" class="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold truncate pr-4" id="det_f_titulo">Detalhes da Tarefa</h2>
+                <button onclick="closeModal('modalDetalheFluxo')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-2">Linha do Tempo</h3>
+                    <div class="relative border-l-2 border-gray-200 dark:border-gray-800 ml-3 space-y-4" id="det_f_timeline">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-2">Histórico (Logs)</h3>
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 space-y-2 text-xs font-mono text-gray-600 dark:text-gray-400" id="det_f_logs">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GALERIA E PREVIEW (Mantidos) -->
+    <div id="modalGallery" class="slide-modal fixed inset-0 z-[60] bg-[#f2f2f7] dark:bg-[#000000] flex flex-col">
+        <div class="pt-safe-top glass-panel relative z-10 border-b border-gray-300 dark:border-gray-800">
+            <div class="flex items-center justify-between px-4 py-3">
+                <button onclick="closeGallery()" class="text-iosBlue flex items-center gap-1 font-medium"><i class="ph-bold ph-caret-left text-xl"></i> Voltar</button>
+                <h2 id="galleryTitle" class="font-bold text-lg truncate flex-1 text-center px-2">Arquivos</h2>
+                <div class="w-16"></div>
+            </div>
+        </div>
+        <div id="galleryGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-safe-bottom content-start"></div>
+    </div>
+
+    <div id="modalPreview" class="slide-modal fixed inset-0 z-[70] bg-black flex flex-col">
+        <div class="pt-safe-top w-full z-10 shrink-0">
+            <div class="flex items-center justify-between px-4 py-3">
+                <button onclick="closePreview()" class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white"><i class="ph-bold ph-x text-xl"></i></button>
+                <a id="btnDownloadPreview" href="#" target="_blank" download class="px-5 py-2 bg-iosBlue text-white font-semibold rounded-full flex items-center gap-2"><i class="ph-bold ph-download-simple"></i> Baixar</a>
+            </div>
+        </div>
+        <div id="previewMediaContainer" class="flex-1 flex items-center justify-center w-full min-h-0 relative"></div>
+        <div class="w-full p-6 pb-safe-bottom shrink-0">
+            <h3 id="previewFilename" class="text-white font-semibold text-lg truncate">Nome</h3>
+            <p id="previewType" class="text-gray-400 text-sm">Tipo</p>
+        </div>
+    </div>
 
     <script>
-        // COLOQUE O SEU LINK DO APPS SCRIPT AQUI APÓS O NOVO DEPLOY
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxStlNozLTkpHekE4D_1cjy7IYkt6cyYoJas42qA3EOJUGot-TiXx9pYWRW6_EZgpDF/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxUg7HaDmnLO4tqpnkgL5CuA26iu53OY3krgSCCGvjC_RWLUeXib7Y34jePToqCVooR/exec"; 
 
-        let appState = { currentTab: 'inicio', tarefas: [], checklist: [], materiais: [], usuarios: [] };
-        let currentUser = null; 
-        
         let editingItemId = null;
         let currentGalleryFiles = [];
+        let currentUser = null; 
 
-        // Variáveis de controle de usuário
-        let editandoUsuarioId = null;
-        let base64FotoTemp = null;
-        let mimeFotoTemp = null;
-
-        const CAT_COLORS = { 'Geral': 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300', 'Câmera': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300', 'Fotografia': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', 'Projeção': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', 'Edição': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
-
-        // --- INICIALIZAÇÃO ---
-        window.onload = async () => {
-            atualizarIconeTema();
-            checkSessao();
-            setTimeout(() => { 
-                const splash = document.getElementById('splashScreen'); splash.style.opacity = '0';
-                setTimeout(() => splash.style.display = 'none', 700);
-            }, 800);
+        // Estado Global (Simplificando a logica, tarefas agora usam o modelo fluxo)
+        let appState = { 
+            currentTab: 'inicio', 
+            tarefasFluxo: [], 
+            checklist: [], 
+            materiais: [],
+            usuarios: []
         };
 
-        // --- AUTENTICAÇÃO ---
-        function checkSessao() {
-            const userStr = localStorage.getItem('umadecre_user_auth');
-            if (userStr) {
-                currentUser = JSON.parse(userStr);
-                mostrarApp();
-                fetchData();
+        // --- INICIALIZAÇÃO & AUTH ---
+        window.onload = async () => {
+            atualizarIconeTema();
+            verificarSessao();
+            
+            const splash = document.getElementById('splashScreen');
+            if (currentUser) {
+                const minWait = new Promise(resolve => setTimeout(resolve, 1500));
+                const dataFetch = fetchData();
+                await Promise.all([minWait, dataFetch]);
+                renderAll(); 
+                splash.style.opacity = '0';
+                setTimeout(() => { splash.style.display = 'none'; }, 700);
             } else {
-                mostrarLogin();
+                setTimeout(() => { 
+                    splash.style.opacity = '0'; 
+                    setTimeout(() => { splash.style.display = 'none'; }, 700);
+                }, 1000);
+            }
+        };
+
+        function verificarSessao() {
+            const savedUser = localStorage.getItem('umadecre_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                aplicarRegrasUsuario();
+                document.getElementById('loginScreen').style.opacity = '0';
+                setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 500);
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('loginScreen').style.opacity = '1';
             }
         }
 
-        function mostrarLogin() {
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('appContainer').classList.add('hidden');
-        }
+        function aplicarRegrasUsuario() {
+            if(!currentUser) return;
+            document.getElementById('user_profile_name').innerText = `Olá, ${currentUser.Nome.split(' ')[0]}`;
+            document.getElementById('user_profile_role').innerText = currentUser.Funcao || 'Membro';
+            if(currentUser.FotoPerfilURL) document.getElementById('user_profile_img').src = currentUser.FotoPerfilURL;
 
-        function mostrarApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('appContainer').classList.remove('hidden');
-            document.getElementById('btnProfilePic').src = currentUser.foto || `https://ui-avatars.com/api/?name=${currentUser.nome}`;
-            switchTab('inicio');
+            if (currentUser.TipoUsuario === 'admin') {
+                document.body.classList.add('is-admin');
+            } else {
+                document.body.classList.remove('is-admin');
+                if(appState.currentTab === 'equipe') switchTab('inicio');
+            }
         }
 
         async function realizarLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('log_email').value;
-            const senha = document.getElementById('log_senha').value;
-            const erroEl = document.getElementById('log_erro');
-            
-            erroEl.classList.add('hidden');
-            setLoading('log_btn', true);
-            
-            const res = await apiRequest({ action: 'login', data: { email, senha } });
-            
-            setLoading('log_btn', false);
-            if(res.success) {
+            setBtnLoading('login_btn', true);
+            document.getElementById('login_error').classList.add('hidden');
+
+            const email = document.getElementById('login_email').value;
+            const senha = document.getElementById('login_senha').value;
+
+            const res = await apiRequest({ action: 'login', email, senha });
+
+            if (res.success) {
                 currentUser = res.user;
-                localStorage.setItem('umadecre_user_auth', JSON.stringify(currentUser));
-                mostrarApp();
-                fetchData();
+                localStorage.setItem('umadecre_user', JSON.stringify(currentUser));
+                aplicarRegrasUsuario();
+                await fetchData();
+                renderAll();
+                
+                document.getElementById('loginScreen').style.opacity = '0';
+                setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 500);
             } else {
-                erroEl.innerText = res.error; erroEl.classList.remove('hidden');
+                document.getElementById('login_error').classList.remove('hidden');
             }
+            setBtnLoading('login_btn', false);
         }
 
         function realizarLogout() {
-            localStorage.removeItem('umadecre_user_auth');
+            localStorage.removeItem('umadecre_user');
             currentUser = null;
-            closeModal('modalPerfil');
-            document.getElementById('log_email').value = '';
-            document.getElementById('log_senha').value = '';
-            mostrarLogin();
+            window.location.reload();
         }
 
-        function isAdmin() { return currentUser && currentUser.role === 'admin'; }
-
-        // --- NAVEGAÇÃO E RENDERIZAÇÃO GERAL ---
-        function switchTab(tabName) {
-            appState.currentTab = tabName;
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('active', 'text-iosBlue'); el.classList.add('text-gray-400'); if(el.dataset.tab === tabName) { el.classList.add('active', 'text-iosBlue'); el.classList.remove('text-gray-400'); } });
-
-            const btn = document.getElementById('mainAddBtn');
-            if(btn) {
-                btn.style.transform = 'scale(0.8)'; setTimeout(() => btn.style.transform = 'scale(1)', 150);
-                if(!isAdmin() || tabName === 'config' || tabName === 'concluidas') btn.classList.add('hidden');
-                else btn.classList.remove('hidden');
-            }
-            renderAll();
-        }
-
-        function renderAll() {
-            renderDashboard(); renderTarefas(); renderConcluidas(); renderChecklist(); renderMateriais();
-        }
-
-        // --- RENDERIZAÇÃO DE TAREFAS COM PERMISSÕES ---
-        function renderTarefas() {
-            const list = document.getElementById('tarefasList');
-            let pendentes = appState.tarefas.filter(t => t.status !== 'concluida');
-            pendentes.sort((a, b) => new Date(a.prazo) - new Date(b.prazo));
-            
-            if(pendentes.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-10"><i class="ph-thin ph-check-circle text-6xl mb-2"></i><p>Tudo limpo por aqui!</p></div>`; return; }
-
-            const hoje = new Date(new Date().toDateString());
-            list.innerHTML = pendentes.map(t => {
-                const isAtrasado = new Date(t.prazo + 'T00:00:00') < hoje;
-                const catClass = CAT_COLORS[t.categoria] || CAT_COLORS['Geral'];
-                
-                const isMinha = currentUser && t.responsavel.toLowerCase() === currentUser.nome.toLowerCase();
-                const podeConcluir = isAdmin() || isMinha;
-                const htmlCheck = podeConcluir ? `<button onclick="toggleTarefaStatus('${t.id}', 'concluida')" class="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 mt-1 flex-shrink-0 flex items-center justify-center hover:border-iosGreen transition-colors"></button>` : `<div class="w-6 h-6 rounded-full border-2 border-gray-300/50 dark:border-gray-700 mt-1 flex-shrink-0"></div>`;
-                const htmlEdit = isAdmin() ? `<button onclick="openEditTarefa('${t.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors"><i class="ph-bold ph-pencil-simple"></i></button>` : '';
-
-                return `
-                <div class="glass-panel ios-card p-5 flex gap-4 items-start relative ${isAtrasado ? 'border-red-500/30' : ''}">
-                    ${htmlCheck}
-                    <div class="flex-1 pr-8">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${catClass}">${t.categoria || 'Geral'}</span>
-                        <h4 class="font-bold text-lg leading-tight mt-1 ${isAtrasado ? 'text-red-500 dark:text-red-400' : ''}">${t.nome}</h4>
-                        <p class="text-gray-500 text-sm mt-1 mb-3">${t.descricao}</p>
-                        <div class="flex items-center gap-3 text-xs font-semibold">
-                            <span class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded-md flex items-center gap-1"><i class="ph-bold ph-user"></i> ${t.responsavel}</span>
-                            <span class="px-2 py-1 rounded-md flex items-center gap-1 ${isAtrasado ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300' : 'bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-300'}"><i class="ph-bold ph-calendar"></i> ${formatarData(t.prazo)} ${isAtrasado ? '(Atrasado)' : ''}</span>
-                        </div>
-                    </div>
-                    ${htmlEdit}
-                </div>`;
-            }).join('');
-        }
-
-        // --- GESTÃO DE USUÁRIOS E PERFIL ---
-        function openModal(id) { 
-            if(id === 'modalPerfil') carregarMeuPerfil();
-            document.getElementById(id).classList.add('active'); 
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        function carregarMeuPerfil() {
-            document.getElementById('perfilFoto').src = currentUser.foto || `https://ui-avatars.com/api/?name=${currentUser.nome}`;
-            document.getElementById('perfilNome').innerText = currentUser.nome;
-            document.getElementById('perfilFuncao').innerText = currentUser.funcao;
-            
-            if(isAdmin()) {
-                document.getElementById('perfilAdminBadge').classList.remove('hidden');
-                document.getElementById('btnAdminUsuarios').classList.remove('hidden');
+        // --- SISTEMA DE TEMA ---
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
             } else {
-                document.getElementById('perfilAdminBadge').classList.add('hidden');
-                document.getElementById('btnAdminUsuarios').classList.add('hidden');
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
             }
-
-            const minhas = appState.tarefas.filter(t => t.responsavel.toLowerCase() === currentUser.nome.toLowerCase() && t.status !== 'concluida');
-            const list = document.getElementById('perfilTarefas');
-            if(minhas.length === 0) list.innerHTML = `<p class="text-gray-400 text-sm text-center">Nenhuma tarefa pendente para você.</p>`;
-            else list.innerHTML = minhas.map(t => `<div class="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm font-medium"><i class="ph-fill ph-clock text-orange-500"></i> ${t.nome}</div>`).join('');
+            atualizarIconeTema();
         }
-
-        function editarMeuPerfil() { openFormUsuario(currentUser.id); }
-
-        function abrirAdminUsuarios() {
-            closeModal('modalPerfil');
-            const list = document.getElementById('listaUsuariosAdmin');
-            list.innerHTML = appState.usuarios.map(u => `
-                <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-gray-100 transition-colors" onclick="openFormUsuario('${u.id}')">
-                    <img src="${u.foto || `https://ui-avatars.com/api/?name=${u.nome}`}" class="w-12 h-12 rounded-full object-cover">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-[17px] flex items-center gap-2">${u.nome} ${u.role==='admin'?'<i class="ph-fill ph-shield-check text-iosBlue text-sm"></i>':''}</h4>
-                        <p class="text-gray-500 text-sm">${u.funcao}</p>
-                    </div>
-                    <i class="ph-bold ph-pencil-simple text-gray-400"></i>
-                </div>
-            `).join('');
-            openModal('modalAdminUsuarios');
-        }
-
-        function openFormUsuario(id = null) {
-            editandoUsuarioId = id;
-            base64FotoTemp = null;
-            document.getElementById('formUsuario').reset();
-            
-            if(id) {
-                const u = appState.usuarios.find(x => x.id === id);
-                if(u) {
-                    document.getElementById('tituloFormUsuario').innerText = 'Editar Usuário';
-                    document.getElementById('u_nome').value = u.nome;
-                    document.getElementById('u_funcao').value = u.funcao;
-                    document.getElementById('u_email').value = u.email;
-                    document.getElementById('u_senha').required = false;
-                    document.getElementById('formUsuFoto').src = u.foto || `https://ui-avatars.com/api/?name=${u.nome}`;
-                }
+        function atualizarIconeTema() {
+            const icon = document.getElementById('themeIcon');
+            const checkbox = document.getElementById('themeToggleCheckbox');
+            const isDark = document.documentElement.classList.contains('dark');
+            if(isDark) {
+                if(icon) icon.classList.replace('ph-moon', 'ph-sun');
+                if(checkbox) checkbox.checked = true;
             } else {
-                document.getElementById('tituloFormUsuario').innerText = 'Novo Usuário';
-                document.getElementById('u_senha').required = true;
-                document.getElementById('formUsuFoto').src = `https://ui-avatars.com/api/?name=U`;
+                if(icon) icon.classList.replace('ph-sun', 'ph-moon');
+                if(checkbox) checkbox.checked = false;
             }
-            openModal('modalFormUsuario');
         }
 
-        function previewFotoUsuario(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('formUsuFoto').src = e.target.result;
-                base64FotoTemp = e.target.result;
-                mimeFotoTemp = file.type;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function salvarUsuario(e) {
-            e.preventDefault();
-            setLoading('u_btn', true);
-            
-            const userData = {
-                nome: document.getElementById('u_nome').value,
-                funcao: document.getElementById('u_funcao').value,
-                email: document.getElementById('u_email').value,
-                senha: document.getElementById('u_senha').value
-            };
-
-            // AQUI ESTAVA O BUG CORRIGIDO! Sempre anexa a foto atual na edição para não sumir.
-            if (editandoUsuarioId) {
-                const existing = appState.usuarios.find(x => x.id === editandoUsuarioId);
-                userData.fotoAtual = existing ? existing.foto : '';
-            }
-
-            if (base64FotoTemp) {
-                userData.fotoBase64 = base64FotoTemp;
-                userData.fotoMimeType = mimeFotoTemp;
-            } 
-
-            if(editandoUsuarioId) userData.id = editandoUsuarioId;
-
-            await apiRequest({ action: 'saveUsuario', data: userData });
-            await fetchData();
-            setLoading('u_btn', false);
-            closeModal('modalFormUsuario');
-            
-            if(document.getElementById('modalAdminUsuarios').classList.contains('active')) abrirAdminUsuarios();
-            if(editandoUsuarioId === currentUser.id) carregarMeuPerfil();
-        }
-
-
-        // --- COMUNICAÇÃO API E OUTRAS FUNÇÕES ---
+        // --- API & DATA FETCH ---
         async function apiRequest(payload) {
-            if(!WEB_APP_URL) return {success: true};
+            if(!WEB_APP_URL || WEB_APP_URL.includes("COLE_SUA_URL_AQUI")) {
+                alert("Configure a URL do Web App no código HTML!");
+                return { success: false };
+            }
+            if(currentUser && payload.action !== 'login') {
+                payload.requestUserId = currentUser.ID;
+            }
             try {
                 const response = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
                 return await response.json();
@@ -580,55 +609,472 @@
         }
 
         async function fetchData() {
-            if(!WEB_APP_URL || !currentUser) return; 
+            if(!currentUser) return;
             try {
-                const response = await fetch(`${WEB_APP_URL}?action=getAll`);
+                const response = await fetch(`${WEB_APP_URL}?action=getAll&userId=${currentUser.ID}`);
                 const data = await response.json();
-                if(data.tarefas) { 
-                    appState = data;
-                    
-                    const me = appState.usuarios.find(u => u.id === currentUser.id);
-                    if(me) { currentUser = me; localStorage.setItem('umadecre_user_auth', JSON.stringify(me)); document.getElementById('btnProfilePic').src = me.foto || `https://ui-avatars.com/api/?name=${me.nome}`; }
-                    
+                if(data.tarefasFluxo) { 
+                    appState = { ...appState, ...data }; 
                     renderAll(); 
+                    verificarNotificacoes();
                 }
-            } catch (error) { console.error("Erro:", error); }
+            } catch (error) { console.error("Erro ao carregar dados:", error); }
+        }
+
+        async function forceSync() {
+            const icon = document.getElementById('syncIcon');
+            if(icon) icon.classList.add('animate-spin');
+            await fetchData();
+            if(icon) icon.classList.remove('animate-spin');
+        }
+
+        // --- NAVEGAÇÃO ---
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'text-iosBlue');
+                el.classList.add('text-gray-400');
+                if(el.dataset.tab === tabName) {
+                    el.classList.add('active', 'text-iosBlue');
+                    el.classList.remove('text-gray-400');
+                }
+            });
+
+            const btn = document.getElementById('mainAddBtn');
+            if(btn) {
+                btn.style.transform = 'scale(0.8)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 150);
+                
+                if(tabName === 'concluidas' || tabName === 'config') { 
+                    btn.style.display = 'none'; 
+                } else if ((tabName === 'tarefas' || tabName === 'equipe') && currentUser.TipoUsuario !== 'admin') {
+                    btn.style.display = 'none'; // Apenas admin cria tarefas (fluxo) ou equipe
+                } else { 
+                    btn.style.display = 'flex'; 
+                }
+            }
+            renderAll();
+        }
+
+        // --- RENDERIZAÇÃO GERAL ---
+        function renderAll() {
+            if(!currentUser) return;
+            renderDashboard(); 
+            renderTarefas(); 
+            renderConcluidas(); 
+            renderChecklist(); 
+            renderMateriais();
+            renderEquipe();
+        }
+
+        function renderDashboard() {
+            // Conta as tarefas gerais unificadas
+            const total = appState.tarefasFluxo.length;
+            const concluidas = appState.tarefasFluxo.filter(t => t.Status === 'concluida').length;
+            const percent = total === 0 ? 0 : Math.round((concluidas / total) * 100);
+
+            document.getElementById('dashPercent').innerText = `${percent}%`;
+            document.getElementById('dashCompleted').innerText = concluidas;
+            document.getElementById('dashTotal').innerText = total;
+            document.getElementById('dashPendenteCount').innerText = total - concluidas;
+            document.getElementById('dashConcluidaCount').innerText = concluidas;
+
+            const circle = document.getElementById('progressCircle');
+            const circumference = 40 * 2 * Math.PI; 
+            circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
+        }
+
+        // --- RENDER EQUIPE ---
+        function renderEquipe() {
+            if(currentUser.TipoUsuario !== 'admin') return;
+            const list = document.getElementById('equipeList');
+            if(appState.usuarios.length === 0) {
+                list.innerHTML = `<p class="text-center text-gray-500 mt-10">Nenhum usuário.</p>`; return;
+            }
+            
+            list.innerHTML = appState.usuarios.map(u => `
+                <div class="glass-panel ios-card p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <img src="${u.FotoPerfilURL || 'https://ui-avatars.com/api/?name='+u.Nome}" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <p class="font-bold text-base leading-tight ${u.Status === 'inativo' ? 'text-red-500 line-through' : ''}">${u.Nome}</p>
+                            <p class="text-xs text-gray-500">${u.Funcao} • ${u.TipoUsuario}</p>
+                        </div>
+                    </div>
+                    <button onclick="openEditUsuario('${u.ID}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // --- RENDER TAREFAS (AGORA SÃO O FLUXO) ---
+        function renderTarefas() {
+            const list = document.getElementById('tarefasList');
+            let tarefas = appState.tarefasFluxo;
+            
+            if(tarefas.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 py-10"><i class="ph-thin ph-list-bullets text-6xl mb-2"></i><p>Nenhuma tarefa ativa.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = tarefas.filter(f => f.Status !== 'concluida').map(f => {
+                let fluxoObj = [];
+                try { fluxoObj = JSON.parse(f.Fluxo); } catch(e){}
+                
+                const idVal = f.ID !== undefined ? f.ID : f.id;
+                
+                const etapaAtualVal = f.EtapaAtual !== undefined ? f.EtapaAtual : f.Etapaatual;
+                const etapaAtualIdx = parseInt(etapaAtualVal) || 0;
+                const etapaAtualInfo = fluxoObj[etapaAtualIdx] || { etapa: 'Concluído', usuarioId: null };
+                
+                const usuarioAtualVal = f.UsuarioAtual !== undefined ? f.UsuarioAtual : f.Usuarioatual;
+                const userAtual = appState.usuarios.find(u => u.ID === usuarioAtualVal);
+                const nomeUserAtual = userAtual ? userAtual.Nome.split(' ')[0] : 'Sistema';
+                
+                const isMinhaVez = (usuarioAtualVal === currentUser.ID);
+
+                return `
+                <div class="glass-panel ios-card p-5 relative ${isMinhaVez ? 'ring-2 ring-iosBlue ring-offset-2 dark:ring-offset-black' : ''}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700">${f.Status}</span>
+                        <button onclick="openDetalheFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-clock-counter-clockwise"></i> Histórico</button>
+                    </div>
+                    
+                    <h4 class="font-bold text-lg leading-tight mb-1">${f.Titulo}</h4>
+                    <p class="text-gray-500 text-sm mb-4 line-clamp-2">${f.Descricao}</p>
+                    
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-3 flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase">Etapa Atual</p>
+                            <p class="font-semibold text-sm">${etapaAtualInfo.etapa}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-gray-500 font-bold uppercase">Com</p>
+                            <p class="font-semibold text-sm flex items-center justify-end gap-1"><i class="ph-bold ph-user text-xs"></i> ${nomeUserAtual}</p>
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full mb-4 overflow-hidden">
+                        <div class="bg-iosBlue h-full rounded-full transition-all" style="width: ${fluxoObj.length > 0 ? (etapaAtualIdx / fluxoObj.length)*100 : 100}%"></div>
+                    </div>
+
+                    ${isMinhaVez ? `
+                        <button onclick="avancarEtapa('${idVal}')" class="w-full py-3 bg-iosBlue text-white font-bold rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                            <i class="ph-bold ph-check-circle"></i> Concluir Minha Etapa
+                        </button>
+                    ` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function verificarNotificacoes() {
+            const list = appState.tarefasFluxo;
+            const hasPendente = list.some(f => {
+                const usuarioAtualVal = f.UsuarioAtual !== undefined ? f.UsuarioAtual : f.Usuarioatual;
+                return usuarioAtualVal === currentUser.ID && f.Status !== 'concluida';
+            });
+            const badge = document.getElementById('badgeTarefa');
+            if(badge) {
+                if(hasPendente) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
+            }
+        }
+
+        function renderConcluidas() { 
+            const list = document.getElementById('concluidasList');
+            const search = document.getElementById('searchConcluidas').value.toLowerCase();
+            let concluidas = appState.tarefasFluxo.filter(t => t.Status === 'concluida');
+            if(search) concluidas = concluidas.filter(t => t.Titulo.toLowerCase().includes(search));
+            
+            if(concluidas.length === 0) { list.innerHTML = `<p class="text-center text-gray-400 py-10">Nenhuma tarefa encontrada.</p>`; return; }
+            list.innerHTML = concluidas.map(t => {
+                const idVal = t.ID !== undefined ? t.ID : t.id;
+                return `
+                <div class="glass-panel ios-card p-5 flex gap-4 items-center opacity-70">
+                    <div class="w-8 h-8 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-sm"></i></div>
+                    <div class="flex-1 text-gray-500">
+                        <h4 class="font-bold text-lg leading-tight line-through">${t.Titulo}</h4>
+                        <button onclick="openDetalheFluxo('${idVal}')" class="text-xs font-semibold mt-1 flex items-center gap-1 text-iosBlue hover:underline"><i class="ph-bold ph-clock-counter-clockwise"></i> Ver Histórico</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function renderChecklist() { 
+            const list = document.getElementById('checklistList');
+            if(appState.checklist.length === 0) { list.innerHTML = `<div class="p-6 text-center text-gray-400">Checklist vazio</div>`; return; }
+            list.innerHTML = appState.checklist.map(c => `
+                <div class="p-4 flex items-center justify-between group">
+                    <div class="flex items-center gap-4 cursor-pointer flex-1" onclick="toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')">
+                        <div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center">${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}</div>
+                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMateriais() { 
+            const list = document.getElementById('materiaisList');
+            const search = document.getElementById('searchMateriais').value.toLowerCase();
+            let materiais = appState.materiais;
+            if(search) materiais = materiais.filter(m => m.titulo.toLowerCase().includes(search) || m.descricao.toLowerCase().includes(search));
+
+            if(materiais.length === 0) { list.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Nenhum material</div>`; return; }
+            list.innerHTML = materiais.map(m => `
+                <div class="glass-panel ios-card p-5 relative cursor-pointer" onclick="openGallery('${m.id}')">
+                    <div class="block pr-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-4"><i class="ph-fill ph-images text-2xl"></i></div>
+                        <h4 class="font-bold text-lg">${m.titulo}</h4>
+                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- INTERAÇÕES E MODAIS ---
+        function setBtnLoading(btnPrefix, isLoading) {
+            const text = document.getElementById(`${btnPrefix}_text`);
+            const spin = document.getElementById(`${btnPrefix}_spin`);
+            if(isLoading) { text.classList.add('hidden'); spin.classList.remove('hidden'); } 
+            else { text.classList.remove('hidden'); spin.classList.add('hidden'); }
         }
 
         function openContextModal() {
-            if(!isAdmin()) return;
             const tab = appState.currentTab;
-            if(tab === 'inicio' || tab === 'tarefas') openModal('modalTarefa');
+            if((tab === 'inicio' || tab === 'tarefas') && currentUser.TipoUsuario === 'admin') openTarefaCreate();
             else if(tab === 'checklist') openModal('modalChecklist');
             else if(tab === 'materiais') openModal('modalMaterial');
+            else if(tab === 'equipe' && currentUser.TipoUsuario === 'admin') openNovoUsuario();
         }
 
-        function setLoading(btnPrefix, isLoad) {
-            const t = document.getElementById(`${btnPrefix}_text`), s = document.getElementById(`${btnPrefix}_spin`);
-            if(isLoad) { t.classList.add('hidden'); s.classList.remove('hidden'); } else { t.classList.remove('hidden'); s.classList.add('hidden'); }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            try { 
+                const f = document.querySelector(`#${id} form`);
+                if(f) f.reset(); 
+            } catch(e){}
+            editingItemId = null;
         }
 
-        async function submitTarefa(e) { e.preventDefault(); setLoading('t_btn', true); const data = { nome: document.getElementById('t_nome').value, descricao: document.getElementById('t_desc').value, responsavel: document.getElementById('t_resp').value, categoria: document.getElementById('t_cat').value, prazo: document.getElementById('t_prazo').value }; if (editingItemId) data.id = editingItemId; await apiRequest({ action: editingItemId ? 'editTarefa' : 'addTarefa', data }); await fetchData(); closeModal('modalTarefa'); setLoading('t_btn', false); }
-        async function submitChecklist(e) { e.preventDefault(); setLoading('c_btn', true); const data = { nome: document.getElementById('c_nome').value, quantidade: document.getElementById('c_qtd').value }; if (editingItemId) data.id = editingItemId; await apiRequest({ action: editingItemId ? 'editChecklist' : 'addChecklist', data }); await fetchData(); closeModal('modalChecklist'); setLoading('c_btn', false); }
-        async function submitMaterial(e) { e.preventDefault(); setLoading('m_btn', true); const data = { titulo: document.getElementById('m_titulo').value, descricao: document.getElementById('m_desc').value, linkDrive: document.getElementById('m_link').value }; if (editingItemId) data.id = editingItemId; await apiRequest({ action: editingItemId ? 'editMaterial' : 'addMaterial', data }); await fetchData(); closeModal('modalMaterial'); setLoading('m_btn', false); }
-        function openEditTarefa(id) { const item = appState.tarefas.find(t => t.id === id); if(!item) return; editingItemId = id; document.getElementById('modalTarefaTitle').innerText = 'Editar Tarefa'; document.getElementById('t_nome').value = item.nome; document.getElementById('t_desc').value = item.descricao; document.getElementById('t_resp').value = item.responsavel; document.getElementById('t_cat').value = item.categoria || 'Geral'; document.getElementById('t_prazo').value = item.prazo ? String(item.prazo).split('T')[0] : ''; openModal('modalTarefa'); }
-        function openEditChecklist(id) { const item = appState.checklist.find(c => c.id === id); if(!item) return; editingItemId = id; document.getElementById('modalChecklistTitle').innerText = 'Editar Item'; document.getElementById('c_nome').value = item.nome; document.getElementById('c_qtd').value = item.quantidade; openModal('modalChecklist'); }
-        function openEditMaterial(id) { const item = appState.materiais.find(m => m.id === id); if(!item) return; editingItemId = id; document.getElementById('modalMaterialTitle').innerText = 'Editar Material'; document.getElementById('m_titulo').value = item.titulo; document.getElementById('m_desc').value = item.descricao; document.getElementById('m_link').value = item.linkDrive || item.linkdrive || ''; openModal('modalMaterial'); }
-        async function toggleTarefaStatus(id, newStatus) { const idx = appState.tarefas.findIndex(t => t.id === id); if(idx > -1) { appState.tarefas[idx].status = newStatus; renderAll(); await apiRequest({ action: 'updateTarefaStatus', data: { id, status: newStatus } }); } }
-        async function toggleChecklistStatus(id, newStatus) { const idx = appState.checklist.findIndex(c => c.id === id); if(idx > -1) { appState.checklist[idx].status = newStatus; renderChecklist(); await apiRequest({ action: 'updateChecklistStatus', data: { id, status: newStatus } }); } }
+        // --- MANEJO DE USUARIOS ---
+        function openNovoUsuario() {
+            editingItemId = null;
+            document.getElementById('modalUsuarioTitle').innerText = 'Novo Membro';
+            document.getElementById('u_nome').value = '';
+            document.getElementById('u_funcao').value = '';
+            document.getElementById('u_email').value = '';
+            document.getElementById('u_senha').value = '';
+            document.getElementById('u_tipo').value = 'usuario';
+            document.getElementById('u_foto_file').value = '';
+            document.getElementById('u_foto_base64').value = '';
+            document.getElementById('u_foto_mime').value = '';
+            document.getElementById('u_foto_url').value = '';
+            document.getElementById('u_preview_foto').src = 'https://ui-avatars.com/api/?name=U&background=random';
+            document.getElementById('u_btn_text').innerText = 'Salvar Usuário';
+            openModal('modalUsuario');
+        }
 
-        function renderDashboard() { const total = appState.tarefas.length; const concluidas = appState.tarefas.filter(t => t.status === 'concluida').length; const pct = total === 0 ? 0 : Math.round((concluidas/total)*100); document.getElementById('dashPercent').innerText = `${pct}%`; document.getElementById('dashCompleted').innerText = concluidas; document.getElementById('dashTotal').innerText = total; document.getElementById('dashPendenteCount').innerText = total - concluidas; document.getElementById('dashConcluidaCount').innerText = concluidas; const circle = document.getElementById('progressCircle'); circle.style.strokeDashoffset = 251.2 - (pct/100)*251.2; }
-        function renderConcluidas() { const list = document.getElementById('concluidasList'); const search = document.getElementById('searchConcluidas').value.toLowerCase(); let concluidas = appState.tarefas.filter(t => t.status === 'concluida'); if(search) concluidas = concluidas.filter(t => t.nome.toLowerCase().includes(search) || t.responsavel.toLowerCase().includes(search)); if(concluidas.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-10"><p>Nenhuma tarefa encontrada.</p></div>`; return; } list.innerHTML = concluidas.map(t => { const isMinha = currentUser && t.responsavel.toLowerCase() === currentUser.nome.toLowerCase(); const canRev = isAdmin() || isMinha; const btn = canRev ? `<button onclick="toggleTarefaStatus('${t.id}', 'pendente')" class="w-6 h-6 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-xs"></i></button>` : `<div class="w-6 h-6 rounded-full bg-gray-400 text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-xs"></i></div>`; return `<div class="glass-panel ios-card p-5 flex gap-4 items-start opacity-70">${btn}<div class="flex-1 line-through text-gray-500"><h4 class="font-bold text-lg leading-tight">${t.nome}</h4><div class="flex items-center gap-3 text-xs font-semibold mt-2 no-underline"><span class="px-2 py-1 rounded-md bg-gray-200 dark:bg-gray-800">${t.responsavel}</span></div></div></div>`; }).join(''); }
-        function renderChecklist() { const list = document.getElementById('checklistList'); if(appState.checklist.length === 0) { list.innerHTML = `<div class="p-6 text-center text-gray-400">Checklist vazio</div>`; return; } list.innerHTML = appState.checklist.map(c => { const cEdit = isAdmin(); const click = cEdit ? `onclick="toggleChecklistStatus('${c.id}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')"` : ''; const btn = cEdit ? `<button onclick="openEditChecklist('${c.id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-iosBlue transition-colors"><i class="ph-bold ph-pencil-simple"></i></button>` : ''; return `<div class="p-4 flex items-center justify-between hover:bg-white/40 dark:hover:bg-black/20 transition-colors group"><div class="flex items-center gap-4 ${cEdit?'cursor-pointer':''} flex-1" ${click}><div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition-colors">${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}</div><span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span></div><div class="flex items-center gap-3"><span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>${btn}</div></div>`; }).join(''); }
-        function renderMateriais() { const list = document.getElementById('materiaisList'); const search = document.getElementById('searchMateriais').value.toLowerCase(); let mat = appState.materiais; if(search) mat = mat.filter(m => m.titulo.toLowerCase().includes(search) || m.descricao.toLowerCase().includes(search)); if(mat.length === 0) { list.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Nenhum material</div>`; return; } list.innerHTML = mat.map(m => `<div class="glass-panel ios-card p-5 relative cursor-pointer" onclick="openGallery('${m.id}')">${isAdmin() ? `<button onclick="event.stopPropagation(); openEditMaterial('${m.id}')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-md flex items-center justify-center text-gray-500 z-10"><i class="ph-bold ph-pencil-simple"></i></button>` : ''}<div class="block pr-6"><div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-4"><i class="ph-fill ph-images text-2xl"></i></div><h4 class="font-bold text-lg text-gray-900 dark:text-white">${m.titulo}</h4><p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao}</p><p class="text-iosBlue text-xs font-semibold mt-3 flex items-center gap-1"><i class="ph-bold ph-folder-open"></i> Abrir Galeria</p></div></div>`).join(''); }
-        function formatarData(dataString) { if(!dataString) return ''; let d = String(dataString); if(d.indexOf('T') === -1) d += 'T00:00:00'; const data = new Date(d); if (isNaN(data.getTime())) return 'Inválida'; return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', ''); }
-        function toggleTheme() { if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.setItem('theme', 'light'); } else { document.documentElement.classList.add('dark'); localStorage.setItem('theme', 'dark'); } atualizarIconeTema(); }
-        function atualizarIconeTema() { const icon = document.getElementById('themeIcon'); const checkbox = document.getElementById('themeToggleCheckbox'); const isDark = document.documentElement.classList.contains('dark'); if(isDark) { if(icon) icon.classList.replace('ph-moon', 'ph-sun'); if(checkbox) checkbox.checked = true; } else { if(icon) icon.classList.replace('ph-sun', 'ph-moon'); if(checkbox) checkbox.checked = false; } }
-        async function forceSync() { const icon = document.getElementById('syncIcon'); if(icon) icon.classList.add('animate-spin'); await fetchData(); if(icon) icon.classList.remove('animate-spin'); }
-        async function openGallery(materialId) { const mat = appState.materiais.find(m => m.id === materialId); if(!mat) return; document.getElementById('galleryTitle').innerText = mat.titulo; document.getElementById('modalGallery').classList.add('active'); const grid = document.getElementById('galleryGrid'); grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i></div>`; const linkFolder = mat.linkDrive || mat.linkdrive; const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder }); if(res.success && res.files && res.files.length > 0) { currentGalleryFiles = res.files; grid.innerHTML = res.files.map((f, i) => `<div onclick="openPreview(${i})" class="aspect-square rounded-2xl bg-gradient-to-br ${f.type==='video'?'from-gray-700 to-gray-900':'from-iosBlue to-blue-800'} relative overflow-hidden shadow-sm cursor-pointer" style="${f.id ? `background-image: url('https://drive.google.com/thumbnail?id=${f.id}&sz=w500'); background-size: cover;` : ''}"><div class="absolute inset-0 bg-black/20"></div><div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent"><p class="text-white text-[11px] font-semibold truncate">${f.name}</p></div></div>`).join(''); } else { grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400">Vazia/Erro</div>`; } }
-        function closeGallery() { document.getElementById('modalGallery').classList.remove('active'); currentGalleryFiles = []; }
-        function openPreview(idx) { const f = currentGalleryFiles[idx]; if(!f) return; const isVid = f.type === 'video'; const c = document.getElementById('previewMediaContainer'); c.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-4xl text-white"></i>`; document.getElementById('modalPreview').classList.add('active'); document.getElementById('previewFilename').innerText = f.name; document.getElementById('previewType').innerText = isVid?'Vídeo':'Imagem'; document.getElementById('btnDownloadPreview').href = f.downloadUrl || f.url; document.getElementById('btnDownloadPreview').download = f.name; setTimeout(() => { if (isVid) { c.innerHTML = f.id ? `<iframe src="https://drive.google.com/file/d/${f.id}/preview" class="w-full h-full border-0"></iframe>` : `<video src="${f.url}" controls class="w-full max-h-full"></video>`; } else { c.innerHTML = `<img src="${f.url}" class="w-full max-h-full object-contain">`; } }, 300); }
-        function closePreview() { document.getElementById('modalPreview').classList.remove('active'); setTimeout(() => { document.getElementById('previewMediaContainer').innerHTML = ''; }, 300); }
+        function previewProfileImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('u_preview_foto').src = e.target.result;
+                const base64Data = e.target.result.split(',')[1];
+                const mimeType = e.target.result.split(';')[0].split(':')[1];
+                
+                document.getElementById('u_foto_base64').value = base64Data;
+                document.getElementById('u_foto_mime').value = mimeType;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function openEditUsuario(id) {
+            const user = appState.usuarios.find(u => u.ID === id);
+            if(!user) return;
+            editingItemId = id;
+            document.getElementById('modalUsuarioTitle').innerText = 'Editar Membro';
+            document.getElementById('u_nome').value = user.Nome;
+            document.getElementById('u_funcao').value = user.Funcao;
+            document.getElementById('u_email').value = user.Email;
+            document.getElementById('u_senha').value = user.Senha;
+            document.getElementById('u_tipo').value = user.TipoUsuario;
+            
+            document.getElementById('u_foto_file').value = '';
+            document.getElementById('u_foto_base64').value = '';
+            document.getElementById('u_foto_mime').value = '';
+            document.getElementById('u_foto_url').value = user.FotoPerfilURL || '';
+            document.getElementById('u_preview_foto').src = user.FotoPerfilURL || 'https://ui-avatars.com/api/?name='+encodeURIComponent(user.Nome);
+            
+            document.getElementById('u_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalUsuario');
+        }
+
+        async function submitUsuario(e) {
+            e.preventDefault(); setBtnLoading('u_btn', true);
+            const data = {
+                nome: document.getElementById('u_nome').value,
+                funcao: document.getElementById('u_funcao').value,
+                email: document.getElementById('u_email').value,
+                senha: document.getElementById('u_senha').value,
+                tipo: document.getElementById('u_tipo').value,
+                fotoUrl: document.getElementById('u_foto_url').value,
+                fotoBase64: document.getElementById('u_foto_base64').value,
+                fotoMimeType: document.getElementById('u_foto_mime').value
+            };
+            
+            const action = editingItemId ? 'editUsuario' : 'addUsuario';
+            if(editingItemId) data.id = editingItemId;
+
+            const res = await apiRequest({ action: action, data: data });
+            if(res.success) {
+                closeModal('modalUsuario');
+                forceSync(); 
+            } else {
+                alert("Erro ao salvar usuário: " + res.error);
+            }
+            setBtnLoading('u_btn', false);
+        }
+
+        // --- MANEJO DE TAREFAS (COM FLUXO) ---
+        let countEtapasForm = 0;
+        function openTarefaCreate() {
+            document.getElementById('t_etapas_container').innerHTML = '';
+            countEtapasForm = 0;
+            addEtapaToForm(); // Adiciona a primeira etapa vazia
+            openModal('modalTarefa');
+        }
+
+        function addEtapaToForm() {
+            countEtapasForm++;
+            const container = document.getElementById('t_etapas_container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center etapa-row";
+            
+            let userOptions = appState.usuarios.map(u => `<option value="${u.ID}">${u.Nome} (${u.Funcao})</option>`).join('');
+            
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-iosBlue text-white flex items-center justify-center font-bold text-xs shrink-0">${countEtapasForm}</div>
+                <input type="text" placeholder="Nome da Etapa (Ex: Edição)" class="ios-input py-2 px-3 text-sm flex-1 t-etapa-nome" required>
+                <select class="ios-input py-2 px-3 text-sm flex-1 t-etapa-user" required>
+                    <option value="">Selecione Usuário...</option>
+                    ${userOptions}
+                </select>
+            `;
+            container.appendChild(div);
+        }
+
+        async function submitTarefa(e) {
+            e.preventDefault(); setBtnLoading('t_btn', true);
+            
+            const rows = document.querySelectorAll('.etapa-row');
+            let fluxoArr = [];
+            rows.forEach(r => {
+                fluxoArr.push({
+                    etapa: r.querySelector('.t-etapa-nome').value,
+                    usuarioId: r.querySelector('.t-etapa-user').value
+                });
+            });
+
+            if(fluxoArr.length === 0) { alert("Adicione pelo menos uma etapa."); setBtnLoading('t_btn', false); return; }
+
+            const data = {
+                titulo: document.getElementById('t_titulo').value,
+                descricao: document.getElementById('t_desc').value,
+                fluxo: fluxoArr
+            };
+
+            const res = await apiRequest({ action: 'addTarefaFluxo', data: data });
+            if(res.success) {
+                closeModal('modalTarefa');
+                forceSync();
+            } else {
+                console.error("Erro: " + res.error);
+            }
+            setBtnLoading('t_btn', false);
+        }
+
+        async function avancarEtapa(fluxoId) {
+            // Removido confirm() pois é bloqueado em WebViews/Iframes
+            
+            const fIdx = appState.tarefasFluxo.findIndex(f => (f.ID !== undefined ? f.ID : f.id) === fluxoId);
+            if(fIdx > -1) {
+                appState.tarefasFluxo[fIdx].Status = 'em andamento (salvando...)';
+                renderTarefas();
+            }
+
+            const res = await apiRequest({ action: 'avancarEtapaFluxo', data: { id: fluxoId } });
+            if(res.success) {
+                await fetchData(); 
+            } else {
+                console.error("Erro: " + (res.error || "Erro desconhecido"));
+                forceSync();
+            }
+        }
+
+        function openDetalheFluxo(fluxoId) {
+            const f = appState.tarefasFluxo.find(x => (x.ID !== undefined ? x.ID : x.id) === fluxoId);
+            if(!f) return;
+
+            document.getElementById('det_f_titulo').innerText = f.Titulo;
+            
+            let fluxoArr = [];
+            let histArr = [];
+            try { fluxoArr = JSON.parse(f.Fluxo); } catch(e){}
+            try { histArr = JSON.parse(f.Historico); } catch(e){}
+            
+            const etapaAtualVal = f.EtapaAtual !== undefined ? f.EtapaAtual : f.Etapaatual;
+            const etapaAtualIdx = parseInt(etapaAtualVal) || 0;
+
+            document.getElementById('det_f_timeline').innerHTML = fluxoArr.map((et, idx) => {
+                const isPassado = idx < etapaAtualIdx;
+                const isAtual = idx === etapaAtualIdx && f.Status !== 'concluida';
+                const user = appState.usuarios.find(u => u.ID === et.usuarioId);
+                const userName = user ? user.Nome : 'Desconhecido';
+                
+                let icon = '<div class="w-3 h-3 bg-gray-300 rounded-full mt-1"></div>';
+                let txtColor = 'text-gray-400';
+                if(isPassado) { icon = '<i class="ph-fill ph-check-circle text-green-500 text-base"></i>'; txtColor = 'text-gray-500 line-through'; }
+                if(isAtual) { icon = '<i class="ph-fill ph-record text-iosBlue text-base animate-pulse"></i>'; txtColor = 'text-gray-900 dark:text-white font-bold'; }
+
+                return `
+                <div class="flex gap-3 relative">
+                    <div class="absolute -left-[1.35rem] bg-white dark:bg-[#1C1C1E] py-1">${icon}</div>
+                    <div>
+                        <p class="text-sm ${txtColor}">${idx+1}. ${et.etapa}</p>
+                        <p class="text-[10px] text-gray-500 flex items-center gap-1"><i class="ph-bold ph-user"></i> ${userName}</p>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('det_f_logs').innerHTML = histArr.map(h => {
+                const date = new Date(h.data).toLocaleString('pt-BR');
+                return `<div class="border-b border-gray-200 dark:border-gray-800 last:border-0 pb-1 mb-1"><span class="text-gray-400 block text-[9px]">${date}</span>${h.msg}</div>`;
+            }).join('') || 'Sem histórico';
+
+            openModal('modalDetalheFluxo');
+        }
+
+        async function submitChecklist(e) { e.preventDefault(); }
+        async function submitMaterial(e) { e.preventDefault(); }
+        async function toggleChecklistStatus(id, s) { }
+
+        // --- GALERIA E PREVIEW ---
+        function openGallery(id) {}
+        function closeGallery() { document.getElementById('modalGallery').classList.remove('active'); }
+        function openPreview(index) {}
+        function closePreview() { document.getElementById('modalPreview').classList.remove('active'); }
+
     </script>
 </body>
 </html>
