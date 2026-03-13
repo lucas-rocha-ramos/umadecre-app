@@ -274,7 +274,7 @@
             <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
                 <img src="https://i.ibb.co/Rp3YHrVk/Icone-umadecre.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
                 <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                <p class="text-[10px]">Versão 2.2 • Pro</p>
+                <p class="text-[10px]">Versão 2.1 • Pro</p>
             </div>
         </div>
 
@@ -355,7 +355,7 @@
         <div class="modal-content w-full sm:w-[400px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[32px] p-6 pb-safe-bottom shadow-2xl hide-scrollbar">
             <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 sm:hidden"></div>
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Nova Tarefa</h2>
+                <h2 class="text-xl font-bold" id="modalTarefaTitle">Nova Tarefa</h2>
                 <button onclick="closeModal('modalTarefa')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"><i class="ph-bold ph-x"></i></button>
             </div>
             <form id="formTarefa" onsubmit="submitTarefa(event)" class="space-y-4">
@@ -837,6 +837,8 @@
             
             const audio = document.getElementById('audioAlertaAviso');
             if(audio) {
+                audio.muted = false; // Garante que tira do mudo silencioso
+                audio.volume = 1;
                 audio.currentTime = 0;
                 audio.play().catch(e => console.log("Aguardando interação do usuário para tocar o áudio."));
             }
@@ -902,7 +904,10 @@
                 <div class="glass-panel ios-card p-5 relative ${isMinhaVez ? 'ring-2 ring-iosBlue ring-offset-2 dark:ring-offset-black' : ''}">
                     <div class="flex justify-between items-start mb-2">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700">${f.Status}</span>
-                        <button onclick="openDetalheFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-clock-counter-clockwise"></i> Histórico</button>
+                        <div class="flex items-center gap-3">
+                            ${currentUser.TipoUsuario === 'admin' ? `<button onclick="openEditTarefaFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-pencil-simple"></i> Editar</button>` : ''}
+                            <button onclick="openDetalheFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-clock-counter-clockwise"></i> Histórico</button>
+                        </div>
                     </div>
                     
                     <h4 class="font-bold text-lg leading-tight mb-1">${f.Titulo}</h4>
@@ -1122,16 +1127,67 @@
 
             const res = await apiRequest({ action: action, data: data });
             if(!res.success) { console.error("Erro ao salvar usuário: " + res.error); }
-            forceSync(); // Sync real id / images silently
+            forceSync(); 
             setBtnLoading('u_btn', false);
         }
 
         // --- MANEJO DE TAREFAS (COM FLUXO E UI OTIMISTA) ---
         let countEtapasForm = 0;
         function openTarefaCreate() {
+            editingItemId = null;
+            document.getElementById('modalTarefaTitle').innerText = 'Nova Tarefa';
+            document.getElementById('t_titulo').value = '';
+            document.getElementById('t_desc').value = '';
+            document.getElementById('t_btn_text').innerText = 'Salvar Tarefa';
+            
             document.getElementById('t_etapas_container').innerHTML = '';
             countEtapasForm = 0;
             addEtapaToForm(); 
+            openModal('modalTarefa');
+        }
+
+        function openEditTarefaFluxo(id) {
+            const f = appState.tarefasFluxo.find(x => (x.ID !== undefined ? x.ID : x.id) === id);
+            if(!f) return;
+            
+            editingItemId = id;
+            document.getElementById('modalTarefaTitle').innerText = 'Editar Tarefa';
+            document.getElementById('t_titulo').value = f.Titulo;
+            document.getElementById('t_desc').value = f.Descricao;
+            
+            let fluxoObj = [];
+            try { fluxoObj = JSON.parse(f.Fluxo); } catch(e){}
+            
+            const container = document.getElementById('t_etapas_container');
+            container.innerHTML = '';
+            countEtapasForm = 0;
+            
+            if(fluxoObj.length === 0) {
+                addEtapaToForm();
+            } else {
+                fluxoObj.forEach(et => {
+                    countEtapasForm++;
+                    const div = document.createElement('div');
+                    div.className = "flex gap-2 items-center etapa-row";
+                    
+                    let userOptions = appState.usuarios.map(u => {
+                        const uid = u.ID || u.id;
+                        return `<option value="${uid}" ${uid === et.usuarioId ? 'selected' : ''}>${u.Nome} (${u.Funcao})</option>`;
+                    }).join('');
+                    
+                    div.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-iosBlue text-white flex items-center justify-center font-bold text-xs shrink-0">${countEtapasForm}</div>
+                        <input type="text" placeholder="Nome da Etapa (Ex: Edição)" class="ios-input py-2 px-3 text-sm flex-1 t-etapa-nome" value="${et.etapa}" required>
+                        <select class="ios-input py-2 px-3 text-sm flex-1 t-etapa-user" required>
+                            <option value="">Selecione Usuário...</option>
+                            ${userOptions}
+                        </select>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            
+            document.getElementById('t_btn_text').innerText = 'Salvar Alterações';
             openModal('modalTarefa');
         }
 
@@ -1174,15 +1230,27 @@
                 fluxo: fluxoArr
             };
 
+            const actionName = editingItemId ? 'editTarefaFluxo' : 'addTarefaFluxo';
+            if (editingItemId) data.id = editingItemId;
+
             // --- UI OTIMISTA ---
-            appState.tarefasFluxo.push({
-                ID: 'temp_' + Date.now(), Titulo: data.titulo, Descricao: data.descricao, Fluxo: JSON.stringify(data.fluxo), EtapaAtual: 0, Etapaatual: 0, UsuarioAtual: data.fluxo[0].usuarioId, Usuarioatual: data.fluxo[0].usuarioId, Status: 'pendente', Historico: "[]"
-            });
+            if (editingItemId) {
+                const idx = appState.tarefasFluxo.findIndex(f => (f.ID || f.id) === editingItemId);
+                if(idx > -1) {
+                    appState.tarefasFluxo[idx].Titulo = data.titulo;
+                    appState.tarefasFluxo[idx].Descricao = data.descricao;
+                    appState.tarefasFluxo[idx].Fluxo = JSON.stringify(data.fluxo);
+                }
+            } else {
+                appState.tarefasFluxo.push({
+                    ID: 'temp_' + Date.now(), Titulo: data.titulo, Descricao: data.descricao, Fluxo: JSON.stringify(data.fluxo), EtapaAtual: 0, Etapaatual: 0, UsuarioAtual: data.fluxo[0].usuarioId, Usuarioatual: data.fluxo[0].usuarioId, Status: 'pendente', Historico: "[]"
+                });
+            }
             renderAll();
             closeModal('modalTarefa');
             // -------------------
 
-            const res = await apiRequest({ action: 'addTarefaFluxo', data: data });
+            const res = await apiRequest({ action: actionName, data: data });
             if(!res.success) { console.error("Erro: " + res.error); }
             forceSync();
             setBtnLoading('t_btn', false);
@@ -1327,7 +1395,6 @@
             document.getElementById('modalGallery').classList.add('active');
             const grid = document.getElementById('galleryGrid');
 
-            // Verifica o cache primeiro
             if (galleryCache[materialId]) {
                 currentGalleryFiles = galleryCache[materialId];
                 if (currentGalleryFiles.length > 0) {
@@ -1335,7 +1402,7 @@
                 } else {
                     grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
                 }
-                return; // Impede nova requisição
+                return; 
             }
 
             grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i><p class="text-sm">Buscando arquivos...</p></div>`;
@@ -1345,10 +1412,10 @@
             
             if(res.success && res.files && res.files.length > 0) {
                 currentGalleryFiles = res.files;
-                galleryCache[materialId] = currentGalleryFiles; // Salva no cache
+                galleryCache[materialId] = currentGalleryFiles; 
                 renderGalleryGrid(currentGalleryFiles);
             } else if (res.success && res.files && res.files.length === 0) {
-                galleryCache[materialId] = []; // Salva no cache para não buscar de novo atoa
+                galleryCache[materialId] = []; 
                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
             } else {
                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><i class="ph-bold ph-warning text-4xl mb-3 text-red-500"></i><p>${res.error}</p></div>`;
@@ -1435,7 +1502,7 @@
             if (audioUnlocked) return;
             const audio = document.getElementById('audioAlertaAviso');
             if (audio) {
-                audio.volume = 0; // Silencia o teste
+                audio.muted = true; // Silencia para não dar susto inicial
                 let playPromise = audio.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
@@ -1443,8 +1510,9 @@
                         if (!modal.classList.contains('active')) {
                             audio.pause();
                             audio.currentTime = 0;
+                        } else {
+                            audio.muted = false; // Se o alerta já estava na tela, tira do mudo.
                         }
-                        audio.volume = 1; // Restaura o volume para tocar de verdade quando o alerta abrir
                         audioUnlocked = true;
                         window.removeEventListener('touchstart', unlockAudio);
                         window.removeEventListener('click', unlockAudio);
@@ -1460,3 +1528,16 @@
     </script>
 </body>
 </html>
+```
+
+### 2. Adição no `code.gs` (Apps Script)
+
+Para que a função de **Editar Tarefas** que lhe adicionei no frontend funcione corretamente e grave os dados alterados na folha, adicione este bloco dentro da sua função `doPost(e)` (logo abaixo da parte que tem `if(action === "addTarefaFluxo") { ... }`):
+
+```javascript
+    if(action === "editTarefaFluxo") {
+      var sheet = ss.getSheetByName("TarefasFluxo");
+      var fluxoJson = JSON.stringify(data.fluxo);
+      var updated = updateRowById(sheet, data.id, { titulo: data.titulo, descricao: data.descricao, fluxo: fluxoJson });
+      return formatResponse({ success: updated });
+    }
