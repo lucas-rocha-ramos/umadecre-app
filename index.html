@@ -1065,15 +1065,126 @@
             openModal('modalDetalheFluxo');
         }
 
-        async function submitChecklist(e) { e.preventDefault(); }
-        async function submitMaterial(e) { e.preventDefault(); }
-        async function toggleChecklistStatus(id, s) { }
+        async function submitChecklist(e) {
+            e.preventDefault(); setBtnLoading('c_btn', true);
+            const itemData = { nome: document.getElementById('c_nome').value, quantidade: document.getElementById('c_qtd').value };
+            if (editingItemId) {
+                itemData.id = editingItemId;
+                const res = await apiRequest({ action: 'editChecklist', data: itemData });
+                if(res.success) {
+                    closeModal('modalChecklist'); forceSync();
+                }
+            } else {
+                itemData.status = 'pendente';
+                const res = await apiRequest({ action: 'addChecklist', data: itemData });
+                if(res.success) {
+                    closeModal('modalChecklist'); forceSync();
+                }
+            }
+            setBtnLoading('c_btn', false);
+        }
+
+        async function submitMaterial(e) {
+            e.preventDefault(); setBtnLoading('m_btn', true);
+            const matData = { titulo: document.getElementById('m_titulo').value, descricao: document.getElementById('m_desc').value, linkDrive: document.getElementById('m_link').value };
+            if (editingItemId) {
+                matData.id = editingItemId;
+                const res = await apiRequest({ action: 'editMaterial', data: matData });
+                if(res.success) {
+                    closeModal('modalMaterial'); forceSync();
+                }
+            } else {
+                const res = await apiRequest({ action: 'addMaterial', data: matData });
+                if(res.success) {
+                    closeModal('modalMaterial'); forceSync();
+                }
+            }
+            setBtnLoading('m_btn', false);
+        }
+
+        async function toggleChecklistStatus(id, newStatus) {
+            const index = appState.checklist.findIndex(c => c.id === id);
+            if(index > -1) {
+                appState.checklist[index].status = newStatus; 
+                renderChecklist(); 
+                await apiRequest({ action: 'updateChecklistStatus', data: { id, status: newStatus } });
+            }
+        }
 
         // --- GALERIA E PREVIEW ---
-        function openGallery(id) {}
-        function closeGallery() { document.getElementById('modalGallery').classList.remove('active'); }
-        function openPreview(index) {}
-        function closePreview() { document.getElementById('modalPreview').classList.remove('active'); }
+        async function openGallery(materialId) {
+            const mat = appState.materiais.find(m => m.id === materialId);
+            if(!mat) return;
+            document.getElementById('galleryTitle').innerText = mat.titulo;
+            document.getElementById('modalGallery').classList.add('active');
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i><p class="text-sm">Buscando arquivos...</p></div>`;
+
+            const linkFolder = mat.linkDrive || mat.linkdrive;
+            const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder });
+            
+            if(res.success && res.files && res.files.length > 0) {
+                currentGalleryFiles = res.files; renderGalleryGrid(currentGalleryFiles);
+            } else if (res.success && res.files && res.files.length === 0) {
+                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
+            } else {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><i class="ph-bold ph-warning text-4xl mb-3 text-red-500"></i><p>${res.error}</p></div>`;
+            }
+        }
+
+        function renderGalleryGrid(files) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = files.map((file, index) => {
+                const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+                const icon = isVideo ? 'ph-video-camera' : 'ph-image';
+                const bgColors = isVideo ? 'from-gray-700 to-gray-900' : 'from-iosBlue to-blue-800';
+                const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                const thumbUrl = (file.url.includes('drive.google.com') && file.id) ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w500` : directUrl;
+                const bgStyle = file.id ? `background-image: url('${thumbUrl}'); background-size: cover; background-position: center;` : '';
+
+                return `
+                <div onclick="openPreview(${index})" class="aspect-square rounded-2xl bg-gradient-to-br ${bgColors} relative overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer" style="${bgStyle}">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                    ${!bgStyle ? `<div class="absolute inset-0 flex flex-col items-center justify-center text-white/50"><i class="ph-fill ${icon} text-4xl mb-2"></i></div>` : ''}
+                    ${isVideo ? `<div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md rounded-md px-2 py-0.5 text-[10px] text-white font-bold flex items-center gap-1"><i class="ph-fill ph-play-circle"></i> VÍDEO</div>` : ''}
+                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent"><p class="text-white text-[11px] font-semibold truncate">${file.name}</p></div>
+                </div>`;
+            }).join('');
+        }
+
+        function closeGallery() { 
+            document.getElementById('modalGallery').classList.remove('active'); 
+            currentGalleryFiles = []; 
+        }
+
+        function openPreview(fileIndex) {
+            const file = currentGalleryFiles[fileIndex];
+            if(!file) return;
+            const isVideo = file.type === 'video' || file.name.match(/\.(mp4|mov|avi|mkv)$/i);
+            const container = document.getElementById('previewMediaContainer');
+            container.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-4xl text-white"></i>`;
+            
+            document.getElementById('modalPreview').classList.add('active');
+            document.getElementById('previewFilename').innerText = file.name;
+            document.getElementById('previewType').innerText = isVideo ? 'Vídeo' : 'Imagem';
+            document.getElementById('btnDownloadPreview').href = file.downloadUrl || (file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=download&id=${file.id}` : file.url); 
+            document.getElementById('btnDownloadPreview').download = file.name;
+
+            setTimeout(() => {
+                if (isVideo) {
+                    if (file.url.includes('drive.google.com') && file.id) { container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`; } 
+                    else { container.innerHTML = `<video src="${file.url}" controls autoplay playsinline class="w-full max-h-full object-contain"></video>`; }
+                } else {
+                    const directUrl = file.url.includes('drive.google.com') ? `https://drive.google.com/uc?export=view&id=${file.id}` : file.url;
+                    container.innerHTML = `<img src="${directUrl}" alt="${file.name}" class="w-full max-h-full object-contain">`;
+                }
+            }, 300);
+        }
+
+        function closePreview() { 
+            document.getElementById('modalPreview').classList.remove('active'); 
+            setTimeout(() => { document.getElementById('previewMediaContainer').innerHTML = ''; }, 300);
+        }
 
     </script>
 </body>
