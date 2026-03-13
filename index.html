@@ -18,16 +18,6 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "716ec2f8-9760-4ab3-b98d-1e0884394e6d",
-        });
-      });
-    </script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -279,27 +269,12 @@
                     </div>
                     <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
                 </div>
-
-                <hr class="border-gray-200 dark:border-gray-800">
-
-                <div class="flex items-center justify-between cursor-pointer" onclick="OneSignalDeferred.push(function(OneSignal) { OneSignal.Slidedown.promptPush(); });">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/30 flex items-center justify-center">
-                            <i class="ph-bold ph-bell-ringing text-xl"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-[17px]">Ativar Notificações</p>
-                            <p class="text-xs text-gray-500">Receber alertas no telemóvel</p>
-                        </div>
-                    </div>
-                    <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
-                </div>
             </div>
 
             <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
                 <img src="https://i.ibb.co/Rp3YHrVk/Icone-umadecre.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
                 <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                <p class="text-[10px]">Versão 2.2 • Pro</p>
+                <p class="text-[10px]">Versão 2.1 • Pro</p>
             </div>
         </div>
 
@@ -605,13 +580,6 @@
                 await fetchData();
                 renderAll();
                 
-                // OneSignal SDK Login (Se ativado)
-                if (window.OneSignalDeferred) {
-                    OneSignalDeferred.push(function(OneSignal) {
-                        OneSignal.login(currentUser.ID);
-                    });
-                }
-                
                 iniciarPolling();
                 
                 document.getElementById('loginScreen').style.opacity = '0';
@@ -623,11 +591,6 @@
         }
 
         function realizarLogout() {
-            if (window.OneSignalDeferred) {
-                OneSignalDeferred.push(function(OneSignal) {
-                    OneSignal.logout();
-                });
-            }
             localStorage.removeItem('umadecre_user');
             currentUser = null;
             if(pollingInterval) clearInterval(pollingInterval);
