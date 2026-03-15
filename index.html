@@ -18,6 +18,16 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "716ec2f8-9760-4ab3-b98d-1e0884394e6d",
+        });
+      });
+    </script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -269,12 +279,27 @@
                     </div>
                     <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
                 </div>
+
+                <hr class="border-gray-200 dark:border-gray-800">
+
+                <div class="flex items-center justify-between cursor-pointer" onclick="OneSignalDeferred.push(function(OneSignal) { OneSignal.Slidedown.promptPush(); });">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/30 flex items-center justify-center">
+                            <i class="ph-bold ph-bell-ringing text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[17px]">Ativar Notificações</p>
+                            <p class="text-xs text-gray-500">Receber alertas no telemóvel</p>
+                        </div>
+                    </div>
+                    <i class="ph-bold ph-caret-right text-gray-400 text-xl"></i>
+                </div>
             </div>
 
             <div class="flex flex-col items-center justify-center mt-12 text-gray-400">
                 <img src="https://i.ibb.co/Rp3YHrVk/Icone-umadecre.png" class="w-16 h-16 opacity-50 mb-2 grayscale" alt="Logo">
                 <p class="text-xs font-medium uppercase tracking-widest">Umadecre Media</p>
-                <p class="text-[10px]">Versão 2.1 • Pro</p>
+                <p class="text-[10px]">Versão 2.4 • Pro</p>
             </div>
         </div>
 
@@ -580,6 +605,13 @@
                 await fetchData();
                 renderAll();
                 
+                // OneSignal SDK Login (Se ativado)
+                if (window.OneSignalDeferred) {
+                    OneSignalDeferred.push(function(OneSignal) {
+                        OneSignal.login(currentUser.ID);
+                    });
+                }
+                
                 iniciarPolling();
                 
                 document.getElementById('loginScreen').style.opacity = '0';
@@ -591,6 +623,11 @@
         }
 
         function realizarLogout() {
+            if (window.OneSignalDeferred) {
+                OneSignalDeferred.push(function(OneSignal) {
+                    OneSignal.logout();
+                });
+            }
             localStorage.removeItem('umadecre_user');
             currentUser = null;
             if(pollingInterval) clearInterval(pollingInterval);
@@ -905,7 +942,10 @@
                     <div class="flex justify-between items-start mb-2">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700">${f.Status}</span>
                         <div class="flex items-center gap-3">
-                            ${currentUser.TipoUsuario === 'admin' ? `<button onclick="openEditTarefaFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-pencil-simple"></i> Editar</button>` : ''}
+                            ${currentUser.TipoUsuario === 'admin' ? `
+                            <button onclick="openEditTarefaFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-pencil-simple"></i> Editar</button>
+                            <button onclick="deleteTarefaFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-red-500"><i class="ph-bold ph-trash"></i> Excluir</button>
+                            ` : ''}
                             <button onclick="openDetalheFluxo('${idVal}')" class="text-xs text-gray-500 flex items-center gap-1 font-semibold hover:text-iosBlue"><i class="ph-bold ph-clock-counter-clockwise"></i> Histórico</button>
                         </div>
                     </div>
@@ -960,12 +1000,17 @@
             list.innerHTML = concluidas.map(t => {
                 const idVal = t.ID !== undefined ? t.ID : t.id;
                 return `
-                <div class="glass-panel ios-card p-5 flex gap-4 items-center opacity-70">
+                <div class="glass-panel ios-card p-5 flex gap-4 items-center opacity-70 relative">
                     <div class="w-8 h-8 rounded-full bg-iosGreen text-white flex-shrink-0 flex items-center justify-center"><i class="ph-bold ph-check text-sm"></i></div>
-                    <div class="flex-1 text-gray-500">
-                        <h4 class="font-bold text-lg leading-tight line-through">${t.Titulo}</h4>
+                    <div class="flex-1 text-gray-500 pr-10">
+                        <h4 class="font-bold text-lg leading-tight line-through">${t.Titulo || t.titulo}</h4>
                         <button onclick="openDetalheFluxo('${idVal}')" class="text-xs font-semibold mt-1 flex items-center gap-1 text-iosBlue hover:underline"><i class="ph-bold ph-clock-counter-clockwise"></i> Ver Histórico</button>
                     </div>
+                    ${currentUser.TipoUsuario === 'admin' ? `
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                        <button onclick="deleteTarefaFluxo('${idVal}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-red-500"><i class="ph-bold ph-trash"></i></button>
+                    </div>
+                    ` : ''}
                 </div>
             `}).join('');
         }
@@ -979,10 +1024,16 @@
                 <div class="p-4 flex items-center justify-between group">
                     <div class="flex items-center gap-4 cursor-pointer flex-1" onclick="toggleChecklistStatus('${idVal}', '${c.status === 'concluida' ? 'pendente' : 'concluida'}')">
                         <div class="w-6 h-6 rounded-md border-2 ${c.status === 'concluida' ? 'bg-iosBlue border-iosBlue text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center">${c.status === 'concluida' ? '<i class="ph-bold ph-check text-xs"></i>' : ''}</div>
-                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome}</span>
+                        <span class="font-medium ${c.status === 'concluida' ? 'text-gray-400 line-through' : ''} text-[17px]">${c.nome || c.Nome}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade}</span>
+                        <span class="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-bold">${c.quantidade || c.Quantidade}</span>
+                        ${currentUser.TipoUsuario === 'admin' ? `
+                        <div class="flex items-center gap-2 ml-2 border-l border-gray-200 dark:border-gray-700 pl-2">
+                            <button onclick="openEditChecklist('${idVal}')" class="text-gray-400 hover:text-iosBlue"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
+                            <button onclick="deleteChecklist('${idVal}')" class="text-gray-400 hover:text-red-500"><i class="ph-bold ph-trash text-lg"></i></button>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             `}).join('');
@@ -992,17 +1043,23 @@
             const list = document.getElementById('materiaisList');
             const search = document.getElementById('searchMateriais').value.toLowerCase();
             let materiais = appState.materiais;
-            if(search) materiais = materiais.filter(m => m.titulo.toLowerCase().includes(search) || m.descricao.toLowerCase().includes(search));
+            if(search) materiais = materiais.filter(m => (m.titulo || m.Titulo).toLowerCase().includes(search) || (m.descricao || m.Descricao).toLowerCase().includes(search));
 
             if(materiais.length === 0) { list.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">Nenhum material</div>`; return; }
             list.innerHTML = materiais.map(m => {
                 const idVal = m.id !== undefined ? m.id : m.ID;
                 return `
                 <div class="glass-panel ios-card p-5 relative cursor-pointer" onclick="openGallery('${idVal}')">
+                    ${currentUser.TipoUsuario === 'admin' ? `
+                    <div class="absolute top-3 right-3 flex gap-2 z-10" onclick="event.stopPropagation()">
+                        <button onclick="openEditMaterial('${idVal}')" class="w-8 h-8 rounded-full bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-iosBlue shadow-sm"><i class="ph-bold ph-pencil-simple"></i></button>
+                        <button onclick="deleteMaterial('${idVal}')" class="w-8 h-8 rounded-full bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-red-500 shadow-sm"><i class="ph-bold ph-trash"></i></button>
+                    </div>
+                    ` : ''}
                     <div class="block pr-6">
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center mb-4"><i class="ph-fill ph-images text-2xl"></i></div>
-                        <h4 class="font-bold text-lg">${m.titulo}</h4>
-                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao}</p>
+                        <h4 class="font-bold text-lg">${m.titulo || m.Titulo}</h4>
+                        <p class="text-gray-500 text-sm mt-1 line-clamp-2">${m.descricao || m.Descricao}</p>
                     </div>
                 </div>
             `}).join('');
@@ -1018,10 +1075,29 @@
 
         function openContextModal() {
             const tab = appState.currentTab;
-            if((tab === 'inicio' || tab === 'tarefas') && currentUser.TipoUsuario === 'admin') openTarefaCreate();
-            else if(tab === 'checklist') openModal('modalChecklist');
-            else if(tab === 'materiais') openModal('modalMaterial');
-            else if(tab === 'equipe' && currentUser.TipoUsuario === 'admin') openNovoUsuario();
+            if((tab === 'inicio' || tab === 'tarefas') && currentUser.TipoUsuario === 'admin') {
+                openTarefaCreate();
+            }
+            else if(tab === 'checklist') {
+                editingItemId = null;
+                document.getElementById('modalChecklistTitle').innerText = 'Adicionar ao Checklist';
+                document.getElementById('c_nome').value = '';
+                document.getElementById('c_qtd').value = '';
+                document.getElementById('c_btn_text').innerText = 'Adicionar';
+                openModal('modalChecklist');
+            }
+            else if(tab === 'materiais') {
+                editingItemId = null;
+                document.getElementById('modalMaterialTitle').innerText = 'Vincular Material';
+                document.getElementById('m_titulo').value = '';
+                document.getElementById('m_desc').value = '';
+                document.getElementById('m_link').value = '';
+                document.getElementById('m_btn_text').innerText = 'Salvar Vínculo';
+                openModal('modalMaterial');
+            }
+            else if(tab === 'equipe' && currentUser.TipoUsuario === 'admin') {
+                openNovoUsuario();
+            }
         }
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -1191,6 +1267,14 @@
             openModal('modalTarefa');
         }
 
+        async function deleteTarefaFluxo(id) {
+            if(!confirm("Tem a certeza que deseja excluir esta tarefa?")) return;
+            appState.tarefasFluxo = appState.tarefasFluxo.filter(f => (f.ID || f.id) !== id);
+            renderTarefas(); renderConcluidas();
+            await apiRequest({ action: 'deleteTarefaFluxo', data: { id: id } });
+            forceSync();
+        }
+
         function addEtapaToForm() {
             countEtapasForm++;
             const container = document.getElementById('t_etapas_container');
@@ -1327,7 +1411,26 @@
             openModal('modalDetalheFluxo');
         }
 
-        // --- MANEJO CHECKLIST E MATERIAIS (COM UI OTIMISTA) ---
+        // --- MANEJO CHECKLIST E MATERIAIS (COM UI OTIMISTA E EDICAO) ---
+        function openEditChecklist(id) {
+            const item = appState.checklist.find(c => (c.ID || c.id) === id);
+            if(!item) return;
+            editingItemId = id;
+            document.getElementById('modalChecklistTitle').innerText = 'Editar Checklist';
+            document.getElementById('c_nome').value = item.nome || item.Nome;
+            document.getElementById('c_qtd').value = item.quantidade || item.Quantidade;
+            document.getElementById('c_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalChecklist');
+        }
+
+        async function deleteChecklist(id) {
+            if(!confirm("Deseja excluir este item?")) return;
+            appState.checklist = appState.checklist.filter(c => (c.ID || c.id) !== id);
+            renderChecklist();
+            await apiRequest({ action: 'deleteChecklist', data: { id: id } });
+            forceSync();
+        }
+
         async function submitChecklist(e) {
             e.preventDefault(); setBtnLoading('c_btn', true);
             const itemData = { nome: document.getElementById('c_nome').value, quantidade: document.getElementById('c_qtd').value };
@@ -1351,6 +1454,26 @@
             }
             forceSync();
             setBtnLoading('c_btn', false);
+        }
+
+        function openEditMaterial(id) {
+            const m = appState.materiais.find(x => (x.ID || x.id) === id);
+            if(!m) return;
+            editingItemId = id;
+            document.getElementById('modalMaterialTitle').innerText = 'Editar Material';
+            document.getElementById('m_titulo').value = m.titulo || m.Titulo;
+            document.getElementById('m_desc').value = m.descricao || m.Descricao;
+            document.getElementById('m_link').value = m.linkDrive || m.linkdrive || m.LinkDrive;
+            document.getElementById('m_btn_text').innerText = 'Salvar Alterações';
+            openModal('modalMaterial');
+        }
+
+        async function deleteMaterial(id) {
+            if(!confirm("Deseja excluir este material?")) return;
+            appState.materiais = appState.materiais.filter(m => (m.ID || m.id) !== id);
+            renderMateriais();
+            await apiRequest({ action: 'deleteMaterial', data: { id: id } });
+            forceSync();
         }
 
         async function submitMaterial(e) {
@@ -1391,11 +1514,10 @@
         async function openGallery(materialId) {
             const mat = appState.materiais.find(m => (m.id || m.ID) === materialId);
             if(!mat) return;
-            document.getElementById('galleryTitle').innerText = mat.titulo;
+            document.getElementById('galleryTitle').innerText = mat.titulo || mat.Titulo;
             document.getElementById('modalGallery').classList.add('active');
             const grid = document.getElementById('galleryGrid');
 
-            // Verifica o cache primeiro
             if (galleryCache[materialId]) {
                 currentGalleryFiles = galleryCache[materialId];
                 if (currentGalleryFiles.length > 0) {
@@ -1403,20 +1525,20 @@
                 } else {
                     grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
                 }
-                return; // Impede nova requisição
+                return; 
             }
 
             grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400"><i class="ph-bold ph-spinner animate-spin text-4xl mb-3 text-iosBlue"></i><p class="text-sm">Buscando arquivos...</p></div>`;
 
-            const linkFolder = mat.linkDrive || mat.linkdrive;
+            const linkFolder = mat.linkDrive || mat.linkdrive || mat.LinkDrive;
             const res = await apiRequest({ action: 'getDriveFiles', link: linkFolder });
             
             if(res.success && res.files && res.files.length > 0) {
                 currentGalleryFiles = res.files;
-                galleryCache[materialId] = currentGalleryFiles; // Salva no cache
+                galleryCache[materialId] = currentGalleryFiles; 
                 renderGalleryGrid(currentGalleryFiles);
             } else if (res.success && res.files && res.files.length === 0) {
-                galleryCache[materialId] = []; // Salva no cache para não buscar de novo atoa
+                galleryCache[materialId] = []; 
                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><p>Pasta vazia.</p></div>`;
             } else {
                 grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400"><i class="ph-bold ph-warning text-4xl mb-3 text-red-500"></i><p>${res.error}</p></div>`;
@@ -1432,7 +1554,8 @@
                 
                 let thumbUrl = file.url;
                 if (file.url.includes('drive.google.com') && file.id) {
-                    thumbUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
+                    // Corrigido para garantir a pré-visualização correta da capa em imagens e VÍDEOS
+                    thumbUrl = `https://drive.google.com/thumbnail?id=${file.id}&sz=w500`;
                 }
 
                 return `
@@ -1440,7 +1563,7 @@
                     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" class="w-full block opacity-0 pointer-events-none" alt="">
                     <div onclick="openPreview(${index})" class="absolute inset-0 rounded-2xl bg-gradient-to-br ${bgColors} overflow-hidden shadow-sm hover:scale-[0.98] transition-transform cursor-pointer flex flex-col items-center justify-center">
                         
-                        ${(file.id && !isVideo) ? `<img src="${thumbUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">` : ''}
+                        ${(file.id) ? `<img src="${thumbUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'">` : ''}
                         
                         <div class="absolute inset-0 bg-black/20 pointer-events-none"></div>
                         
@@ -1479,7 +1602,7 @@
                     if (isVideo) {
                         container.innerHTML = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" class="w-full h-full border-0" allow="autoplay; fullscreen"></iframe>`;
                     } else {
-                        const imgUrl = `https://lh3.googleusercontent.com/d/${file.id}`;
+                        const imgUrl = `https://drive.google.com/thumbnail?id=${file.id}&sz=w1000`;
                         container.innerHTML = `<img src="${imgUrl}" alt="${file.name}" class="w-full max-h-full object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<iframe src=\\'https://drive.google.com/file/d/${file.id}/preview\\' class=\\'w-full h-full border-0\\' allow=\\'fullscreen\\'></iframe>';">`;
                     }
                 } else {
